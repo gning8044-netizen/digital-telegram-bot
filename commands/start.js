@@ -22,18 +22,21 @@ module.exports = {
         users = [];
       }
 
-      const isNew = !users.includes(userId);
-      if (isNew) {
-        users.push(userId);
+      const existingUser = users.find(u => u.id === userId);
+      if (!existingUser) {
+        users.push({
+          id: userId,
+          name: userName,
+          username: userUsername,
+          banned: false
+        });
         fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
         const position = users.length;
-        const adminChatId = process.env.ADMIN_CHAT_ID;
-        if (adminChatId) {
-          bot.sendMessage(
-            adminChatId,
-            `👤 Nouvel utilisateur\nNom: ${userName}\nUsername: ${userUsername}\nPosition: ${position}`
-          );
-        }
+        const adminChatId = require.main.require('../index.js').adminChatId;
+        bot.sendMessage(
+          adminChatId,
+          `👤 Nouvel utilisateur\nNom: ${userName}\nUsername: ${userUsername}\nPosition: ${position}`
+        );
       }
 
       if (isSub) {
