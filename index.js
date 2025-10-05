@@ -7,6 +7,8 @@ const token = process.env.BOT_TOKEN || '8110943805:AAHi7nCotgNcQ3Epu7zAQG8xAstZR
 const channelUsername = process.env.CHANNEL_USERNAME || '@digitalcrew2';
 const adminChatId = process.env.ADMIN_CHAT_ID || '6157845763';
 
+module.exports.adminChatId = adminChatId;
+
 const bot = new TelegramBot(token, { polling: true });
 
 const usersFile = path.join(__dirname, 'users.json');
