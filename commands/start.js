@@ -9,7 +9,7 @@ module.exports = {
       {
         reply_markup: {
           inline_keyboard: [
-            [{ text: '📢 Rejoindre le canal', url: 'https://t.me/TON_CANAL_ICI' }],
+            [{ text: '📢 Rejoindre le canal', url: 'https://t.me/digitalcrew2' }],
             [{ text: '✅ J’ai rejoint', callback_data: 'verify_sub' }]
           ]
         }
