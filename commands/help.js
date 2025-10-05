@@ -11,7 +11,7 @@ module.exports = {
     const commandsPath = path.join(__dirname);
     const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-    // Construire le message avec encadrements et emojis
+    
     let helpMessage = `✨ *Bienvenue ${userName} !* ✨\n\n`;
     helpMessage += '📚 *Liste des commandes disponibles :*\n\n';
 
@@ -24,7 +24,7 @@ module.exports = {
     helpMessage += `\n🚀 Tape la commande pour l’exécuter !`;
 
     try {
-      // Récupérer la photo de profil de l'utilisateur
+      
       const photos = await bot.getUserProfilePhotos(userId, 0, 1);
       if (photos.total_count > 0) {
         const fileId = photos.photos[0][0].file_id;
