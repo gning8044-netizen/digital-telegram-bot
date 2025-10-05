@@ -4,7 +4,7 @@ const http = require('http');
 const TelegramBot = require('node-telegram-bot-api');
 
 const token = process.env.BOT_TOKEN || '8110943805:AAHi7nCotgNcQ3Epu7zAQG8xAstZREuT28k';
-const channelUsername = process.env.CHANNEL_USERNAME || '@TON_CANAL_ICI';
+const channelUsername = process.env.CHANNEL_USERNAME || '@digitalcrew2';
 
 const bot = new TelegramBot(token, { polling: true });
 
