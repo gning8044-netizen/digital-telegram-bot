@@ -1,14 +1,40 @@
+const fs = require('fs');
+const path = require('path');
+const usersFile = path.join(__dirname, '../users.json');
+
 module.exports = {
   name: 'start',
   description: 'Démarre le bot et invite à rejoindre le canal',
   async execute(bot, msg) {
     const userId = msg.from.id;
     const userName = msg.from.first_name || 'utilisateur';
+    const userUsername = msg.from.username ? `@${msg.from.username}` : 'Aucun';
     const channelUsername = '@digitalcrew2';
 
     try {
       const member = await bot.getChatMember(channelUsername, userId);
       const isSub = ['member', 'administrator', 'creator'].includes(member.status);
+
+      let users = [];
+      try {
+        users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
+      } catch {
+        users = [];
+      }
+
+      const isNew = !users.includes(userId);
+      if (isNew) {
+        users.push(userId);
+        fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+        const position = users.length;
+        const adminChatId = process.env.ADMIN_CHAT_ID;
+        if (adminChatId) {
+          bot.sendMessage(
+            adminChatId,
+            `👤 Nouvel utilisateur\nNom: ${userName}\nUsername: ${userUsername}\nPosition: ${position}`
+          );
+        }
+      }
 
       if (isSub) {
         bot.sendMessage(
