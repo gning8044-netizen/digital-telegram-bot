@@ -33,18 +33,16 @@ module.exports = {
     }
 
     const total = users.length;
-    const banned = users.filter(u => u.banned).length;
-    const active = total - banned;
+    const bannedCount = users.filter(u => u.banned).length;
+    const active = total - bannedCount;
 
-    let message = `📊 *Statistiques du bot*\n\n👥 Utilisateurs totaux: ${total}\n✅ Actifs: ${active}\n🚫 Bannés: ${banned}\n\n👤 *Liste des utilisateurs :*\n`;
+    let message = `📊 *Statistiques du bot*\n\n👥 Utilisateurs totaux: ${total}\n✅ Actifs: ${active}\n🚫 Banné(s): ${bannedCount}\n\n👤 *Liste des utilisateurs :*\n`;
 
     if (users.length > 0) {
       message += users
         .map(
           (u, i) =>
-            `${i + 1}. ${u.name || 'Inconnu'} (${u.username || 'Aucun'})\nID: ${u.id}\nStatut: ${
-              u.banned ? '🚫 Banni' : '✅ Actif'
-            }\n`
+            `${i + 1}. ${u.name || 'Inconnu'} (${u.username || 'Aucun'})\nID: \`${u.id}\`\nStatut: ${u.banned ? '🚫 Banné' : '✅ Actif'}\n`
         )
         .join('\n');
     } else message += 'Aucun utilisateur enregistré.';
