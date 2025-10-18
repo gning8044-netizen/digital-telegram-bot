@@ -16,11 +16,10 @@ function updateUser(user) {
   const index = users.findIndex(u => u.id === user.id);
   if (index !== -1) {
     users[index] = user;
-    fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
   } else {
     users.push({ ...user, banned: false });
-    fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
   }
+  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
 }
 
 module.exports = {
@@ -39,11 +38,13 @@ module.exports = {
       updateUser(user);
     }
 
-    bot.sendMessage(msg.chat.id, `👤 Ton ID Telegram : \`${userId}\`\nNom/Username : ${username}`, { parse_mode: 'Markdown' });
+    // Message à l'utilisateur lui-même (toujours)
+    await bot.sendMessage(msg.chat.id, `👤 Ton ID Telegram : \`${userId}\`\nNom/Username : ${username}`, { parse_mode: 'Markdown' });
 
+    // Message à l'admin (si ce n'est pas l'admin qui utilise)
     if (userId.toString() !== adminChatId.toString()) {
       const bannedStatus = user.banned ? '🚫 Banni' : '✅ Actif';
-      bot.sendMessage(adminChatId, `🔹 Utilisateur a utilisé /myid\nNom : ${first_name}\nNom d'utilisateur : ${username}\nID : \`${userId}\`\nStatut : ${bannedStatus}`, { parse_mode: 'Markdown' });
+      await bot.sendMessage(adminChatId, `🔹 /myid utilisé\nNom : ${first_name}\nNom d'utilisateur : ${username}\nID : \`${userId}\`\nStatut : ${bannedStatus}`, { parse_mode: 'Markdown' });
     }
   }
 };
