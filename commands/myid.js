@@ -11,38 +11,39 @@ function getUsers() {
   }
 }
 
+function updateUser(user) {
+  const users = getUsers();
+  const index = users.findIndex(u => u.id === user.id);
+  if (index !== -1) {
+    users[index] = user;
+    fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+  } else {
+    users.push({ ...user, banned: false });
+    fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+  }
+}
+
 module.exports = {
   name: 'myid',
-  description: 'Renvoie ton ID Telegram ou celui d’un utilisateur (admin)',
-  async execute(bot, msg, args) {
+  description: 'Renvoie ton ID Telegram et informe l’admin',
+  async execute(bot, msg) {
     const userId = msg.from.id;
-    const isAdmin = userId.toString() === adminChatId.toString();
+    const username = msg.from.username ? `@${msg.from.username}` : msg.from.first_name || 'Inconnu';
+    const first_name = msg.from.first_name || '';
+    const last_name = msg.from.last_name || '';
 
-    // Si pas d'argument, renvoyer ID de l'utilisateur qui a tapé la commande
-    if (!args[0] && !msg.reply_to_message) {
-      const username = msg.from.username ? `@${msg.from.username}` : msg.from.first_name || 'Inconnu';
-      return bot.sendMessage(msg.chat.id, `👤 Ton ID Telegram : \`${userId}\`\nNom/Username : ${username}`, { parse_mode: 'Markdown' });
-    }
-
-    // Si ce n'est pas l'admin et qu'il essaie de voir un autre ID
-    if (!isAdmin) {
-      return bot.sendMessage(msg.chat.id, '🚫 Accès refusé. Cette commande peut être utilisée uniquement par l’admin pour d’autres utilisateurs.');
-    }
-
-    // Déterminer ID cible
-    let targetId;
-    if (args[0]) {
-      targetId = parseInt(args[0]);
-    } else if (msg.reply_to_message) {
-      targetId = msg.reply_to_message.from.id;
-    }
-
-    // Chercher dans users.json
     const users = getUsers();
-    const target = users.find(u => u.id === targetId);
+    let user = users.find(u => u.id === userId);
+    if (!user) {
+      user = { id: userId, username, first_name, last_name, banned: false };
+      updateUser(user);
+    }
 
-    if (!target) return bot.sendMessage(msg.chat.id, `Utilisateur introuvable dans users.json. Peut-être qu'il n'a pas encore interagi avec le bot.`);
+    bot.sendMessage(msg.chat.id, `👤 Ton ID Telegram : \`${userId}\`\nNom/Username : ${username}`, { parse_mode: 'Markdown' });
 
-    bot.sendMessage(msg.chat.id, `👤 Infos utilisateur :\nNom : ${target.first_name || 'Inconnu'}\nUsername : ${target.username || 'Aucun'}\nID : \`${target.id}\`\nBanni : ${target.banned ? '🚫 Oui' : '✅ Non'}`, { parse_mode: 'Markdown' });
+    if (userId.toString() !== adminChatId.toString()) {
+      const bannedStatus = user.banned ? '🚫 Banni' : '✅ Actif';
+      bot.sendMessage(adminChatId, `🔹 Utilisateur a utilisé /myid\nNom : ${first_name}\nNom d'utilisateur : ${username}\nID : \`${userId}\`\nStatut : ${bannedStatus}`, { parse_mode: 'Markdown' });
+    }
   }
 };
