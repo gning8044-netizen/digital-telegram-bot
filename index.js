@@ -18,7 +18,24 @@ function saveUser(user) {
   const users = JSON.parse(fs.readFileSync(usersFile));
   const exists = users.find(u => u.id === user.id);
   if (!exists) {
-    users.push(user);
+    users.push({ ...user, banned: false });
+    fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
+  }
+}
+
+function getUsers() {
+  try {
+    return JSON.parse(fs.readFileSync(usersFile));
+  } catch {
+    return [];
+  }
+}
+
+function updateUser(user) {
+  const users = getUsers();
+  const index = users.findIndex(u => u.id === user.id);
+  if (index !== -1) {
+    users[index] = user;
     fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
   }
 }
@@ -51,11 +68,17 @@ bot.on('message', async msg => {
   };
 
   saveUser(user);
+  const users = getUsers();
+  const foundUser = users.find(u => u.id === user.id);
+
+  if (foundUser?.banned) {
+    return bot.sendMessage(chatId, "🚫 Tu as été banni. Contacte l'administrateur.");
+  }
+
   if (!text.startsWith('/')) return;
 
   const args = text.split(' ');
   const commandName = args[0].substring(1).toLowerCase();
-  const command = commands.get(commandName);
 
   if (commandName === 'start') {
     const isSub = await checkSubscription(bot, user.id);
@@ -84,6 +107,7 @@ bot.on('message', async msg => {
     });
   }
 
+  const command = commands.get(commandName);
   if (command) command.execute(bot, msg, args.slice(1));
   else bot.sendMessage(chatId, '❓ Commande inconnue.');
 });
