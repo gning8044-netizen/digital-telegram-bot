@@ -113,13 +113,8 @@ bot.on('message', async msg => {
 });
 
 bot.on('callback_query', async query => {
-  if (query.data.startsWith('run_')) {
-    const commandName = query.data.replace('run_', '');
-    const command = commands.get(commandName);
-    if (command) {
-      await command.execute(bot, query.message, []);
-    }
-  }
+  const userId = query.from.id.toString();
+  const adminId = require.main.require('./index.js').adminChatId.toString();
 
   if (query.data === 'verify_sub') {
     const isSub = await checkSubscription(bot, query.from.id);
@@ -129,6 +124,38 @@ bot.on('callback_query', async query => {
     } else {
       bot.answerCallbackQuery(query.id, { text: '❌ Toujours pas abonné.' });
     }
+    return;
+  }
+
+  if (query.data.startsWith('run_')) {
+    const cmdName = query.data.replace('run_', '');
+    const cmd = commands.get(cmdName);
+    if (!cmd) return bot.answerCallbackQuery(query.id, { text: 'Commande introuvable.' });
+
+    if (['ban', 'unban', 'stats'].includes(cmdName) && userId !== adminId) {
+      return bot.answerCallbackQuery(query.id, { text: '🚫 Accès refusé.' });
+    }
+
+    await bot.answerCallbackQuery(query.id);
+    await cmd.execute(bot, query, []);
+    return;
+  }
+
+  if (query.data === 'admin_menu') {
+    if (userId !== adminId) return bot.answerCallbackQuery(query.id, { text: '🚫 Accès refusé.' });
+    const adminCommands = [
+      { text: 'Ban', callback_data: 'run_ban' },
+      { text: 'Unban', callback_data: 'run_unban' },
+      { text: 'Stats', callback_data: 'run_stats' },
+      { text: '🔙 Retour', callback_data: 'run_help' }
+    ];
+    await bot.editMessageText('🛠 Menu Admin', {
+      chat_id: query.message.chat.id,
+      message_id: query.message.message_id,
+      reply_markup: { inline_keyboard: adminCommands.map(c => [c]) }
+    });
+    bot.answerCallbackQuery(query.id);
+    return;
   }
 });
 
