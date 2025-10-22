@@ -127,20 +127,6 @@ bot.on('callback_query', async query => {
     return;
   }
 
-  if (query.data.startsWith('run_')) {
-    const cmdName = query.data.replace('run_', '');
-    const cmd = commands.get(cmdName);
-    if (!cmd) return bot.answerCallbackQuery(query.id, { text: 'Commande introuvable.' });
-
-    if (['ban', 'unban', 'stats'].includes(cmdName) && userId !== adminId) {
-      return bot.answerCallbackQuery(query.id, { text: '🚫 Accès refusé.' });
-    }
-
-    await bot.answerCallbackQuery(query.id);
-    await cmd.execute(bot, query, []);
-    return;
-  }
-
   if (query.data === 'admin_menu') {
     if (userId !== adminId) return bot.answerCallbackQuery(query.id, { text: '🚫 Accès refusé.' });
     const adminCommands = [
@@ -156,6 +142,26 @@ bot.on('callback_query', async query => {
     });
     bot.answerCallbackQuery(query.id);
     return;
+  }
+
+  if (query.data.startsWith('run_')) {
+    const cmdName = query.data.replace('run_', '');
+    const cmd = commands.get(cmdName);
+    if (!cmd) return bot.answerCallbackQuery(query.id, { text: 'Commande introuvable.' });
+
+    if (['ban', 'unban', 'stats'].includes(cmdName) && userId !== adminId) {
+      return bot.answerCallbackQuery(query.id, { text: '🚫 Accès refusé.' });
+    }
+
+    const fakeMsg = {
+      chat: { id: query.message.chat.id },
+      from: query.from,
+      text: `/${cmdName}`,
+      message_id: query.message.message_id
+    };
+
+    await bot.answerCallbackQuery(query.id);
+    await cmd.execute(bot, fakeMsg, []);
   }
 });
 
