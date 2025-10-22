@@ -2,7 +2,7 @@ const axios = require("axios");
 
 module.exports = {
   name: "ai",
-  description: "Discute avec l’IA Kyotaka",
+  description: "Discute avec l’IA Digital Crew 243",
   async execute(bot, msg, args) {
     const question = args.join(" ");
     if (!question) {
@@ -11,13 +11,18 @@ module.exports = {
       });
     }
 
+    
+    const typingMessage = await bot.sendChatAction(msg.chat.id, "typing");
+
     try {
-      const res = await axios.get(`https://kyotaka-dark-gpt-api-zf9c.vercel.app/api/chat?prompt=${encodeURIComponent(question)}`);
+      const res = await axios.get(
+        `https://kyotaka-dark-gpt-api-zf9c.vercel.app/api/chat?prompt=${encodeURIComponent(question)}`
+      );
       const reply = res.data || "🤖 Aucune réponse reçue.";
 
       await bot.sendMessage(
         msg.chat.id,
-        `💬 *Question :* ${question}\n\n🤖 *Réponse :* ${reply}`,
+        `💬 *Question :* ${question}\n\n🤖 *Digital Crew 243 :* ${reply}`,
         { parse_mode: "Markdown", reply_to_message_id: msg.message_id }
       );
     } catch (error) {
