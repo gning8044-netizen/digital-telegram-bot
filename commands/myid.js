@@ -1,27 +1,25 @@
+const { adminChatId } = require('../index.js');
+
 module.exports = {
   name: 'myid',
-  description: 'Renvoie ton ID Telegram',
+  description: 'Récupère l’ID et infos d’un utilisateur (admin, reply seulement)',
   async execute(bot, msg) {
-    try {
-      const userId = msg.from.id;
-      const firstName = msg.from.first_name || '';
-      const lastName = msg.from.last_name || '';
-      const username = msg.from.username ? `@${msg.from.username}` : `${firstName} ${lastName}`.trim() || 'Utilisateur';
+    if (msg.from.id.toString() !== adminChatId.toString())
+      return bot.sendMessage(msg.chat.id, '🚫 Accès refusé.');
 
-      let response = `👤 *Votre ID Telegram* : \`${userId}\`\n`;
-      response += `📛 *Nom* : ${username}\n`;
-      
-      if (msg.chat.type !== 'private') {
-        response += `💬 *ID du chat* : \`${msg.chat.id}\``;
-      }
-
-      await bot.sendMessage(msg.chat.id, response, {
-        parse_mode: 'Markdown',
-        reply_to_message_id: msg.message_id
-      });
-
-    } catch (error) {
-      console.error('Erreur myid:', error);
+    if (!msg.reply_to_message) {
+      return bot.sendMessage(msg.chat.id, 'ℹ️ Utilisation : réponds au message de la personne puis tape /myid');
     }
+
+    const target = msg.reply_to_message.from;
+    const id = target.id;
+    const username = target.username ? `@${target.username}` : 'Aucun';
+    const name = `${target.first_name || ''} ${target.last_name || ''}`.trim() || 'Inconnu';
+
+    await bot.sendMessage(
+      msg.chat.id,
+      `👤 Infos utilisateur :\nNom : ${name}\nUsername : ${username}\nID : \`${id}\``,
+      { parse_mode: 'Markdown' }
+    );
   }
 };
