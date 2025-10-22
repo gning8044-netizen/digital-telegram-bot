@@ -3,7 +3,7 @@ const path = require('path');
 
 module.exports = {
   name: 'help',
-  description: 'Affiche toutes les commandes disponibles avec style',
+  description: 'Affiche toutes les commandes disponibles avec boutons cliquables',
   async execute(bot, msg) {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
@@ -11,29 +11,35 @@ module.exports = {
     const commandsPath = path.join(__dirname);
     const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-    
-    let helpMessage = `✨ *Bienvenue ${userName} !* ✨\n\n`;
-    helpMessage += '📚 *Liste des commandes disponibles :*\n\n';
+    const buttons = commandFiles
+      .filter(f => f !== 'help.js')
+      .map(file => {
+        const command = require(path.join(commandsPath, file));
+        return [{ text: `/${command.name}`, callback_data: `run_${command.name}` }];
+      });
 
-    commandFiles.forEach(file => {
-      if (file === 'help.js') return;
-      const command = require(path.join(commandsPath, file));
-      helpMessage += `• /${command.name} - ${command.description || 'Pas de description'}\n`;
-    });
-
-    helpMessage += `\n🚀 Tape la commande pour l’exécuter !`;
+    const helpMessage = `✨ *Bienvenue ${userName} !* ✨\n\n📚 *Liste des commandes disponibles :*`;
 
     try {
-      
       const photos = await bot.getUserProfilePhotos(userId, 0, 1);
       if (photos.total_count > 0) {
         const fileId = photos.photos[0][0].file_id;
-        bot.sendPhoto(chatId, fileId, { caption: helpMessage, parse_mode: 'Markdown' });
+        await bot.sendPhoto(chatId, fileId, {
+          caption: helpMessage,
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: buttons }
+        });
       } else {
-        bot.sendMessage(chatId, helpMessage, { parse_mode: 'Markdown' });
+        await bot.sendMessage(chatId, helpMessage, {
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: buttons }
+        });
       }
     } catch {
-      bot.sendMessage(chatId, helpMessage, { parse_mode: 'Markdown' });
+      await bot.sendMessage(chatId, helpMessage, {
+        parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: buttons }
+      });
     }
   }
 };
