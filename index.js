@@ -113,6 +113,14 @@ bot.on('message', async msg => {
 });
 
 bot.on('callback_query', async query => {
+  if (query.data.startsWith('run_')) {
+    const commandName = query.data.replace('run_', '');
+    const command = commands.get(commandName);
+    if (command) {
+      await command.execute(bot, query.message, []);
+    }
+  }
+
   if (query.data === 'verify_sub') {
     const isSub = await checkSubscription(bot, query.from.id);
     if (isSub) {
