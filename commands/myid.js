@@ -12,21 +12,19 @@ module.exports = {
     }
 
     try {
-      const response = await axios.post("https://kyotaka-dark-gpt-api-zf9c.vercel.app/api/chat", {
-        message: question,
-      });
+      const res = await axios.get(`https://kyotaka-dark-gpt-api-zf9c.vercel.app/api/chat?prompt=${encodeURIComponent(question)}`);
+      const reply = res.data || "🤖 Aucune réponse reçue.";
 
-      const reply = response.data.response || "🤖 Aucune réponse reçue.";
-
-      await bot.sendMessage(msg.chat.id, `💬 *Question :* ${question}\n\n🤖 *Réponse :* ${reply}`, {
-        parse_mode: "Markdown",
-        reply_to_message_id: msg.message_id,
-      });
+      await bot.sendMessage(
+        msg.chat.id,
+        `💬 *Question :* ${question}\n\n🤖 *Réponse :* ${reply}`,
+        { parse_mode: "Markdown", reply_to_message_id: msg.message_id }
+      );
     } catch (error) {
       console.error("Erreur IA :", error.message);
       await bot.sendMessage(
         msg.chat.id,
-        "⚠️ Une erreur est survenue lors de la communication avec l’IA.",
+        `⚠️ Une erreur est survenue lors de la communication avec l’IA.\n${error.message}`,
         { reply_to_message_id: msg.message_id }
       );
     }
