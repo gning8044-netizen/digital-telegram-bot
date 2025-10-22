@@ -1,23 +1,34 @@
-const { adminChatId } = require('../index.js');
+const axios = require("axios");
 
 module.exports = {
-  name: 'myid',
-  description: 'Donne les infos de la personne à qui tu réponds (admin seulement)',
-  async execute(bot, msg) {
-    if (msg.from.id.toString() !== adminChatId.toString())
-      return bot.sendMessage(msg.chat.id, '🚫 Accès refusé.');
-
-    if (!msg.reply_to_message || !msg.reply_to_message.from) {
-      return bot.sendMessage(msg.chat.id, 'ℹ️ Réponds à un message pour obtenir les infos de cette personne.');
+  name: "ai",
+  description: "Discute avec l’IA Kyotaka",
+  async execute(bot, msg, args) {
+    const question = args.join(" ");
+    if (!question) {
+      return bot.sendMessage(msg.chat.id, "⚠️ Utilise : /ai [ta question]", {
+        reply_to_message_id: msg.message_id,
+      });
     }
 
-    const target = msg.reply_to_message.from;
-    const name = `${target.first_name || ''} ${target.last_name || ''}`.trim() || 'Inconnu';
-    const username = target.username ? `@${target.username}` : 'Aucun';
-    const id = target.id;
+    try {
+      const response = await axios.post("https://kyotaka-dark-gpt-api-zf9c.vercel.app/api/chat", {
+        message: question,
+      });
 
-    const message = `👤 *Informations de l'utilisateur :*\n\n📛 *Nom :* ${name}\n🔗 *Username :* ${username}\n🆔 *ID Telegram :* \`${id}\``;
+      const reply = response.data.response || "🤖 Aucune réponse reçue.";
 
-    await bot.sendMessage(msg.chat.id, message, { parse_mode: 'Markdown' });
-  }
+      await bot.sendMessage(msg.chat.id, `💬 *Question :* ${question}\n\n🤖 *Réponse :* ${reply}`, {
+        parse_mode: "Markdown",
+        reply_to_message_id: msg.message_id,
+      });
+    } catch (error) {
+      console.error("Erreur IA :", error.message);
+      await bot.sendMessage(
+        msg.chat.id,
+        "⚠️ Une erreur est survenue lors de la communication avec l’IA.",
+        { reply_to_message_id: msg.message_id }
+      );
+    }
+  },
 };
