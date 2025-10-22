@@ -2,7 +2,7 @@ const axios = require("axios");
 
 module.exports = {
   name: "ai",
-  description: "Discute avec l’IA Digital Crew 243",
+  description: "Discute avec l’IA sans censure Digital Crew 243",
   async execute(bot, msg, args) {
     const question = args.join(" ");
     if (!question) {
