@@ -15,16 +15,20 @@ module.exports = {
 
     let inline_keyboard = [];
 
-    // commandes normales
     commandFiles.forEach(file => {
       const command = require(path.join(commandsPath, file));
-      if (['ban', 'unban', 'stats'].includes(command.name)) return; // exclure les commandes admin du menu principal
+      if (['ban', 'unban', 'stats'].includes(command.name)) return;
       inline_keyboard.push([{ text: command.name, callback_data: `run_${command.name}` }]);
     });
 
-    // si admin, ajouter bouton Admin
     if (userId.toString() === adminId.toString()) {
       inline_keyboard.push([{ text: '🛠 Admin', callback_data: 'admin_menu' }]);
+    }
+
+    const photos = await bot.getUserProfilePhotos(userId, 0, 1);
+    if (photos.total_count > 0) {
+      const fileId = photos.photos[0][0].file_id;
+      await bot.sendPhoto(chatId, fileId);
     }
 
     const message = `✨ Bienvenue ${userName} !\n\n📚 Liste des commandes disponibles :`;
@@ -35,7 +39,6 @@ module.exports = {
   }
 };
 
-// Gestion des callbacks pour afficher le sous-menu Admin
 module.exports.adminMenuHandler = async (bot, query) => {
   const adminId = require.main.require('./index.js').adminChatId;
   if (query.from.id.toString() !== adminId.toString()) {
