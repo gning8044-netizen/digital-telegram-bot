@@ -1,25 +1,30 @@
 module.exports = {
-  name: 'welcome',
-  description: 'Souhaite la bienvenue aux nouveaux membres du groupe',
-  
-  async groupHandler(bot, msg) {
-    const chat = msg.chat;
-    const newMembers = msg.new_chat_members;
+  name: 'kick',
+  description: 'Expulse un membre du groupe',
 
-    if (!newMembers || newMembers.length === 0) return;
+  async execute(bot, msg, args) {
+    const chatId = msg.chat.id;
 
-    for (const member of newMembers) {
-      if (member.is_bot) continue; // ignore les bots
-      const name = member.first_name || member.username || "nouveau membre";
-      const groupName = chat.title || "ce groupe";
-      const desc = (await bot.getChat(chat.id)).description || "Aucune description disponible";
-
-      const message = `🎉 Bienvenue *${name}* dans *${groupName}* !\n📝 Description : ${desc}`;
-      await bot.sendMessage(chat.id, message, { parse_mode: 'Markdown' });
+    // Vérifie que la commande est utilisée dans un groupe
+    if (msg.chat.type === 'private') {
+      return bot.sendMessage(chatId, '❌ Cette commande ne peut être utilisée que dans un groupe.');
     }
-  },
 
-  async execute(bot, msg) {
-    await bot.sendMessage(msg.chat.id, '✅ Le système de bienvenue est activé pour ce groupe.');
+    // Vérifie si l'utilisateur a répondu à un message
+    const target = msg.reply_to_message?.from;
+    if (!target && !args[0]) {
+      return bot.sendMessage(chatId, '⚠️ Réponds au message de la personne à expulser ou indique son ID.');
+    }
+
+    const userId = target ? target.id : parseInt(args[0]);
+
+    try {
+      await bot.banChatMember(chatId, userId);
+      await bot.unbanChatMember(chatId, userId); // autorise le retour si besoin
+      bot.sendMessage(chatId, `🚪 L'utilisateur a été expulsé du groupe.`);
+    } catch (err) {
+      console.error(err);
+      bot.sendMessage(chatId, '❌ Impossible d’expulser cet utilisateur. Le bot doit être administrateur avec les permissions nécessaires.');
+    }
   }
 };
