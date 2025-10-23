@@ -4,14 +4,18 @@ module.exports = {
 
   async execute(bot, msg) {
     const chatId = msg.chat.id;
-    if (!msg.reply_to_message || !msg.reply_to_message.photo) {
+    const reply = msg.reply_to_message;
+
+    if (!reply || (!reply.photo && !reply.document)) {
       return bot.sendMessage(chatId, '📸 Réponds à une image pour obtenir son URL.');
     }
+
     try {
-      const photo = msg.reply_to_message.photo.pop();
-      const file = await bot.getFile(photo.file_id);
+      const fileId = reply.photo ? reply.photo.pop().file_id : reply.document.file_id;
+      const file = await bot.getFile(fileId);
       const fileUrl = `https://api.telegram.org/file/bot${bot.token}/${file.file_path}`;
-      bot.sendMessage(chatId, `🌐 **URL de l’image :**\n${fileUrl}`, {
+
+      await bot.sendMessage(chatId, `🌐 **URL de l’image :**\n${fileUrl}`, {
         parse_mode: 'Markdown',
         reply_markup: {
           inline_keyboard: [
@@ -19,7 +23,7 @@ module.exports = {
           ]
         }
       });
-    } catch (err) {
+    } catch {
       bot.sendMessage(chatId, '❌ Impossible de récupérer l’URL de cette image.');
     }
   }
