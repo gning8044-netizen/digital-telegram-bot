@@ -7,22 +7,31 @@ module.exports = {
 };
 
 module.exports.groupHandler = async (bot, msg) => {
-  if (!msg.new_chat_members) return;
+  if (!msg.new_chat_members || msg.new_chat_members.length === 0) return;
 
   const chatId = msg.chat.id;
   const chat = await bot.getChat(chatId);
   const name = chat.title || 'ce groupe';
   const desc = chat.description || 'Aucune description disponible';
 
+  let photoId = null;
+  try {
+    const chatPhotos = await bot.getChat(chatId);
+    if (chat.photo) {
+      photoId = chat.photo.big_file_id || chat.photo.small_file_id;
+    }
+  } catch {}
+
   for (const user of msg.new_chat_members) {
     if (user.is_bot) continue;
-    const caption = `🎉 Bienvenue @${user.username || user.first_name} !\n\n👥 Groupe : *${name}*\n📝 Description : ${desc}`;
-    if (chat.photo) {
-      const file = await bot.getFile(chat.photo.big_file_id);
-      const photoUrl = `https://api.telegram.org/file/bot${bot.token}/${file.file_path}`;
-      await bot.sendPhoto(chatId, photoUrl, { caption, parse_mode: 'Markdown' });
+
+    const username = user.username ? `@${user.username}` : user.first_name;
+    const text = `🎉 Bienvenue ${username} !\n\n👥 Groupe : *${name}*\n📝 Description : ${desc}`;
+
+    if (photoId) {
+      await bot.sendPhoto(chatId, photoId, { caption: text, parse_mode: 'Markdown' });
     } else {
-      await bot.sendMessage(chatId, caption, { parse_mode: 'Markdown' });
+      await bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
     }
   }
 };
