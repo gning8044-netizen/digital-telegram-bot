@@ -50,7 +50,7 @@ module.exports.adminMenuHandler = async (bot, query) => {
       { text: 'Ban', callback_data: 'run_ban' },
       { text: 'Unban', callback_data: 'run_unban' },
       { text: 'Stats', callback_data: 'run_stats' },
-      { text: 'broadcast', callback_data: 'run_broadcast'}
+      { text: 'Broadcast', callback_data: 'run_broadcast' },
       { text: '🔙 Retour', callback_data: 'run_help' }
     ];
 
