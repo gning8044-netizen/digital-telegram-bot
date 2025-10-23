@@ -47,6 +47,11 @@ for (const file of commandFiles) {
   if (command.name && typeof command.execute === 'function') commands.set(command.name, command);
 }
 
+const welcomeCommand = commands.get('welcome');
+if (welcomeCommand && welcomeCommand.groupHandler) {
+  bot.on('new_chat_members', member => welcomeCommand.groupHandler(bot, member));
+}
+
 async function checkSubscription(bot, userId) {
   try {
     const member = await bot.getChatMember(channelUsername, userId);
@@ -133,8 +138,8 @@ bot.on('callback_query', async query => {
       { text: 'Ban', callback_data: 'run_ban' },
       { text: 'Unban', callback_data: 'run_unban' },
       { text: 'Stats', callback_data: 'run_stats' },
-      { text: 'Broadcast', callback_data: 'run_broadcast'},
-      {text: 'Send', callback_data: 'run_send'},
+      { text: 'Broadcast', callback_data: 'run_broadcast' },
+      { text: 'Send', callback_data: 'run_send' },
       { text: '🔙 Retour', callback_data: 'run_help' }
     ];
     await bot.editMessageText('🛠 Menu Admin', {
