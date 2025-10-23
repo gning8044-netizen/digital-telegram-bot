@@ -2,15 +2,28 @@ const axios = require('axios');
 const FormData = require('form-data');
 
 module.exports = {
-  name: 'imageurl',
-  description: 'Transforme une photo en lien Catbox',
+  name: 'fileurl',
+  description: 'Transforme une photo, GIF ou vidéo en lien Catbox',
   async execute(bot, msg) {
-    if (!msg.reply_to_message || !msg.reply_to_message.photo) {
-      return bot.sendMessage(msg.chat.id, '📸 Réponds à une image pour obtenir son URL.', { reply_to_message_id: msg.message_id });
+    const reply = msg.reply_to_message;
+    if (!reply || (!reply.photo && !reply.document && !reply.video)) {
+      return bot.sendMessage(msg.chat.id, '📸 Réponds à une image, GIF ou vidéo pour obtenir son URL.', { reply_to_message_id: msg.message_id });
     }
 
-    const photos = msg.reply_to_message.photo;
-    const fileId = photos[photos.length - 1].file_id;
+    let fileId;
+    let fileName = 'file';
+
+    if (reply.photo) {
+      const photos = reply.photo;
+      fileId = photos[photos.length - 1].file_id;
+      fileName += '.jpg';
+    } else if (reply.video) {
+      fileId = reply.video.file_id;
+      fileName += '.mp4';
+    } else if (reply.document) {
+      fileId = reply.document.file_id;
+      fileName += reply.document.file_name ? `_${reply.document.file_name}` : '.dat';
+    }
 
     try {
       const fileLink = await bot.getFileLink(fileId);
@@ -18,7 +31,7 @@ module.exports = {
 
       const form = new FormData();
       form.append('reqtype', 'fileupload');
-      form.append('fileToUpload', response.data, 'image.jpg');
+      form.append('fileToUpload', response.data, fileName);
 
       const catboxRes = await axios.post('https://catbox.moe/user/api.php', form, {
         headers: form.getHeaders()
@@ -27,10 +40,10 @@ module.exports = {
       if (catboxRes.data) {
         bot.sendMessage(msg.chat.id, `🌐 URL Catbox : ${catboxRes.data}`, { reply_to_message_id: msg.message_id });
       } else {
-        bot.sendMessage(msg.chat.id, '❌ Impossible de récupérer l’URL de cette image.', { reply_to_message_id: msg.message_id });
+        bot.sendMessage(msg.chat.id, '❌ Impossible de récupérer l’URL.', { reply_to_message_id: msg.message_id });
       }
-    } catch (err) {
-      bot.sendMessage(msg.chat.id, '❌ Impossible de récupérer l’URL de cette image.', { reply_to_message_id: msg.message_id });
+    } catch {
+      bot.sendMessage(msg.chat.id, '❌ Impossible de récupérer l’URL.', { reply_to_message_id: msg.message_id });
     }
   }
 };
