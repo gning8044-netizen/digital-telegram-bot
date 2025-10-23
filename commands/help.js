@@ -17,7 +17,7 @@ module.exports = {
 
     commandFiles.forEach(file => {
       const command = require(path.join(commandsPath, file));
-      if (['ban', 'unban', 'stats'].includes(command.name)) return;
+      if (['ban', 'unban', 'stats', 'broadcast'].includes(command.name)) return;
       inline_keyboard.push([{ text: command.name, callback_data: `run_${command.name}` }]);
     });
 
@@ -50,6 +50,7 @@ module.exports.adminMenuHandler = async (bot, query) => {
       { text: 'Ban', callback_data: 'run_ban' },
       { text: 'Unban', callback_data: 'run_unban' },
       { text: 'Stats', callback_data: 'run_stats' },
+      { text: 'broadcast', callback_data: 'run_broadcast'}
       { text: '🔙 Retour', callback_data: 'run_help' }
     ];
 
