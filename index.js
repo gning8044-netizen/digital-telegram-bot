@@ -48,18 +48,6 @@ for (const file of commandFiles) {
 }
 
 const welcomeCommand = commands.get('welcome');
-if (welcomeCommand && welcomeCommand.groupHandler) {
-  bot.on('new_chat_members', member => welcomeCommand.groupHandler(bot, member));
-}
-
-async function checkSubscription(bot, userId) {
-  try {
-    const member = await bot.getChatMember(channelUsername, userId);
-    return ['member', 'administrator', 'creator'].includes(member.status);
-  } catch {
-    return false;
-  }
-}
 
 bot.on('message', async msg => {
   const chatId = msg.chat.id;
@@ -78,6 +66,10 @@ bot.on('message', async msg => {
 
   if (foundUser?.banned) {
     return bot.sendMessage(chatId, "🚫 Tu as été banni. Contacte l'administrateur.");
+  }
+
+  if (welcomeCommand && welcomeCommand.groupHandler) {
+    welcomeCommand.groupHandler(bot, msg);
   }
 
   if (!text.startsWith('/')) return;
@@ -171,6 +163,15 @@ bot.on('callback_query', async query => {
     await cmd.execute(bot, fakeMsg, []);
   }
 });
+
+async function checkSubscription(bot, userId) {
+  try {
+    const member = await bot.getChatMember(channelUsername, userId);
+    return ['member', 'administrator', 'creator'].includes(member.status);
+  } catch {
+    return false;
+  }
+}
 
 const port = process.env.PORT || 3000;
 http.createServer((req, res) => {
