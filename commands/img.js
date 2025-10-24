@@ -9,7 +9,7 @@ module.exports = {
       return bot.sendMessage(msg.chat.id, "🖼️ Utilisation : /img [description de l’image]");
     }
 
-    const apiKey = "YOUR_API_KEY";
+    const apiKey = "14960d2b4c71e3b190761233";
     const url = `https://api.lolhuman.xyz/api/ai-image?apikey=${apiKey}&text=${encodeURIComponent(query)}`;
 
     try {
