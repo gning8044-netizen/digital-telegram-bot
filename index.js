@@ -78,7 +78,7 @@ bot.on('message', async msg => {
   if (!text.startsWith('/')) return;
 
   const args = text.split(' ');
-  const commandName = args[0].substring(1).toLowerCase();
+  const commandName = args[0].split('@')[0].substring(1).toLowerCase();
 
   if (commandName === 'start') {
     const isSub = await checkSubscription(bot, user.id);
