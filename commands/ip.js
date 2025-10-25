@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 module.exports = {
-  name: 'ip',
+  name: 'ipinfo',
   description: "Récupère les infos d'une IP ou d'un domaine (utilise ip-api.com)",
   async execute(bot, msg, args) {
     const chatId = msg.chat.id;
