@@ -2,50 +2,40 @@ const axios = require('axios');
 
 module.exports = {
   name: 'img',
-  description: 'Recherche des images avec Bing Image Search API',
+  description: 'Recherche des images sur Pexels',
   async execute(bot, msg, args) {
-    const BING_API_KEY = 'TA_CLE_API_ICI'; // ⚠️ Remplace par ta clé
-    const BING_ENDPOINT = 'https://api.bing.microsoft.com/v7.0/images/search';
-
-    if (!args.length) {
-      return bot.sendMessage(msg.chat.id, '❌ Utilisation : /img [terme de recherche] [nombre]\nEx : /img voiture 3');
+    const chatId = msg.chat.id;
+    if (args.length === 0) {
+      return bot.sendMessage(chatId, '❌ Utilisation : /img [mot-clé] [nombre d’images]');
     }
 
-    let count = 3;
-    const lastArg = args[args.length - 1];
-    if (!isNaN(parseInt(lastArg))) {
-      count = Math.min(Math.max(parseInt(lastArg), 1), 10);
-      args.pop();
-    }
+    const query = args[0];
+    const count = parseInt(args[1]) || 3;
 
-    const query = args.join(' ');
-    await bot.sendMessage(msg.chat.id, `🔎 Recherche d’images pour : *${query}*...`, { parse_mode: 'Markdown' });
+    const API_KEY = 'kwhDCyoJLqmjrOnOYnGNKfs7RsKQJzdig4cWVdlpHeY8Uq5iPFb6YJTK'; // ⚠️ Mets ta clé ici
+    const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${count}`;
 
     try {
-      const response = await axios.get(BING_ENDPOINT, {
-        params: { q: query, count },
-        headers: { 'Ocp-Apim-Subscription-Key': BING_API_KEY },
-        timeout: 10000
+      await bot.sendMessage(chatId, `🔍 Recherche d’images pour *${query}*...`, { parse_mode: 'Markdown' });
+
+      const response = await axios.get(url, {
+        headers: { Authorization: API_KEY }
       });
 
-      const images = response.data.value;
-      if (!images || images.length === 0) {
-        return bot.sendMessage(msg.chat.id, '⚠️ Aucune image trouvée.');
+      const photos = response.data.photos;
+      if (!photos || photos.length === 0) {
+        return bot.sendMessage(chatId, '⚠️ Aucune image trouvée.');
       }
 
-      const media = images.slice(0, count).map(img => ({
-        type: 'photo',
-        media: img.contentUrl
-      }));
-
-      if (media.length === 1) {
-        await bot.sendPhoto(msg.chat.id, media[0].media, { caption: `🖼️ ${query}` });
-      } else {
-        await bot.sendMediaGroup(msg.chat.id, media);
+      for (const photo of photos) {
+        await bot.sendPhoto(chatId, photo.src.medium, {
+          caption: `📸 [Voir sur Pexels](${photo.url})`,
+          parse_mode: 'Markdown'
+        });
       }
     } catch (err) {
-      console.error('Erreur Bing Image:', err.response?.data || err.message);
-      bot.sendMessage(msg.chat.id, '❌ Erreur lors de la recherche. Vérifie ta clé API Bing.');
+      console.error('Erreur Pexels:', err.response?.data || err.message);
+      bot.sendMessage(chatId, '❌ Erreur lors de la recherche d’images.');
     }
   }
 };
