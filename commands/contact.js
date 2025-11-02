@@ -15,24 +15,7 @@ module.exports = {
     }
 
     const message = `📩 Nouveau message reçu :\n\n👤 De : ${userTag} (ID: ${user.id})\n\n🗣️ Message : ${prompt}`;
-    await bot.sendMessage(adminId, message, { reply_markup: { force_reply: true } });
+    await bot.sendMessage(adminId, message);
     await bot.sendMessage(chatId, '✅ Message envoyé à l’administrateur.');
-  }
-};
-
-module.exports.replyHandler = async (bot, msg) => {
-  const adminId = require.main.require('./index.js').adminChatId;
-  if (msg.chat.id !== adminId || !msg.reply_to_message) return;
-
-  const repliedText = msg.reply_to_message.text || msg.reply_to_message.caption || '';
-  const match = repliedText.match(/ID:\s(\d+)/);
-  if (!match) return;
-
-  const targetId = match[1];
-  try {
-    await bot.sendMessage(targetId, `📬 Réponse de l’administrateur :\n\n${msg.text}`);
-    await bot.sendMessage(adminId, '✅ Message envoyé à l’utilisateur.');
-  } catch (e) {
-    await bot.sendMessage(adminId, '⚠️ Échec de l’envoi du message.');
   }
 };
