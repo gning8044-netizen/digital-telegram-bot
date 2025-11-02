@@ -3,6 +3,7 @@ module.exports = {
   description: 'Envoie un lien sécurisé pour une capture simulée (consentement requis)',
   async execute(bot, msg) {
     const chatId = msg.chat.id;
+    const username = msg.from.username || msg.from.first_name || "utilisateur";
     const baseUrl = 'https://new-number-virtuel.onrender.com';
     const url = `${baseUrl}/${chatId}`;
 
