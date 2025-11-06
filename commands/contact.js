@@ -18,9 +18,9 @@ module.exports = {
 `📩 Nouveau message reçu :
 
 👤 De : ${userTag}
-🆔 ID :
+
 \`\`\`
-${user.id}
+id: ${user.id}
 \`\`\`
 
 🗣️ Message :
