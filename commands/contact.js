@@ -14,9 +14,9 @@ module.exports = {
       return bot.sendMessage(chatId, '✉️ Utilisation : /contact [votre message]');
     }
 
-    const message = `📩 Nouveau message reçu :\n\n👤 De : ${userTag}\n\n🆔 ID : \`${user.id}\`\n\n🗣️ Message : ${prompt}`;
+    const message = `📩 Nouveau message reçu :\n\n👤 De : ${userTag}\n\n🆔 ID : <pre>${user.id}</pre>\n\n🗣️ Message : ${prompt}`;
     await bot.sendMessage(adminId, message, {
-      parse_mode: 'Markdown',
+      parse_mode: 'HTML',
       reply_markup: {
         inline_keyboard: [
           [{ text: '🔎 Ouvrir le profil', url: `tg://user?id=${user.id}` }]
