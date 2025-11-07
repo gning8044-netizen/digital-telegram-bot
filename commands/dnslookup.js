@@ -1,138 +1,61 @@
 const dns = require('dns').promises;
+const axios = require('axios');
 
 module.exports = {
   name: 'dnslookup',
-  description: 'Recherche DNS avancée (A, AAAA, MX, TXT, NS, CNAME, SOA, SRV, PTR)',
+  description: 'Recherche DNS avancée + WHOIS + ASN + Géolocalisation serveur',
   async execute(bot, msg, args) {
     const chatId = msg.chat.id;
-    const input = (args || []).join(' ').trim();
-    if (!input) {
-      return bot.sendMessage(chatId, '🔎 Utilisation : /dnslookup [type] [domaine|ip]\nEx : /dnslookup example.com\nEx : /dnslookup mx example.com', { reply_to_message_id: msg.message_id });
-    }
+    const domain = (args || []).join(" ").trim();
+    if (!domain) return bot.sendMessage(chatId, "🔎 Utilisation : /dnslookup [domaine]", { reply_to_message_id: msg.message_id });
 
-    const types = ['A','AAAA','MX','TXT','NS','CNAME','SOA','SRV','PTR','ANY'];
-    let reqType = null;
-    let target = input;
-
-    const parts = input.split(/\s+/);
-    if (parts.length >= 2 && types.includes(parts[0].toUpperCase())) {
-      reqType = parts[0].toUpperCase();
-      target = parts.slice(1).join(' ');
-    }
-
-    const isIp = /^[0-9.]+$/.test(target) || /^[0-9a-fA-F:]+$/.test(target);
-
-    const results = [];
     const safeSend = async (text) => {
-      const CHUNK = 4000;
+      const CHUNK = 3800;
       for (let i = 0; i < text.length; i += CHUNK) {
-        await bot.sendMessage(chatId, text.substring(i, i + CHUNK), { parse_mode: 'Markdown', reply_to_message_id: msg.message_id });
+        await bot.sendMessage(chatId, text.substring(i, i + CHUNK), { parse_mode: 'Markdown' });
       }
     };
 
+    let output = `🌐 *Analyse complète du domaine* \`${domain}\`\n\n`;
+
     try {
-      if (reqType && reqType !== 'ANY') {
-        if (reqType === 'PTR') {
-          if (!isIp) return bot.sendMessage(chatId, '❗ Pour PTR fournissez une adresse IP.', { reply_to_message_id: msg.message_id });
-          try {
-            const ptr = await dns.reverse(target);
-            results.push({ title: `PTR pour ${target}`, data: ptr });
-          } catch (e) {
-            results.push({ title: `PTR pour ${target}`, error: e.message });
-          }
-        } else {
-          try {
-            const r = await (reqType === 'SOA' ? dns.resolveSoa(target) : dns.resolve(target, reqType));
-            results.push({ title: `${reqType} pour ${target}`, data: r });
-            if (reqType === 'A' && Array.isArray(r) && r.length) {
-              try {
-                const rev = await dns.reverse(r[0]);
-                results.push({ title: `Reverse PTR de ${r[0]}`, data: rev });
-              } catch {}
-            }
-          } catch (e) {
-            results.push({ title: `${reqType} pour ${target}`, error: e.message });
-          }
-        }
-      } else {
-        const queries = [
-          ['A', async () => dns.resolve(target, 'A')],
-          ['AAAA', async () => dns.resolve(target, 'AAAA')],
-          ['MX', async () => dns.resolve(target, 'MX')],
-          ['TXT', async () => dns.resolve(target, 'TXT')],
-          ['NS', async () => dns.resolve(target, 'NS')],
-          ['CNAME', async () => dns.resolve(target, 'CNAME')],
-          ['SOA', async () => dns.resolveSoa(target)],
-          ['SRV', async () => dns.resolve(target, 'SRV')],
-          ['ANY', async () => dns.resolveAny(target)]
-        ];
+      // ====== 1) DNS A Record ======
+      let aRecord = await dns.resolve(domain, 'A');
+      output += `📌 *Adresse IP :*\n\`\`\`bash\n${aRecord.join('\n')}\n\`\`\`\n`;
 
-        const settled = await Promise.allSettled(queries.map(q => q[1]().then(res => ({ type: q[0], res }))));
-        for (const s of settled) {
-          if (s.status === 'fulfilled') {
-            const { type, res } = s.value;
-            results.push({ title: `${type} pour ${target}`, data: res });
-            if (type === 'A' && Array.isArray(res) && res.length) {
-              try {
-                const rev = await dns.reverse(res[0]);
-                results.push({ title: `Reverse PTR de ${res[0]}`, data: rev });
-              } catch (e) {
-                results.push({ title: `Reverse PTR de ${res[0]}`, error: e.message });
-              }
-            }
-          } else {
-            const reason = s.reason || s;
-            results.push({ title: `Erreur`, error: reason.message || String(reason) });
-          }
-        }
+      const ip = aRecord[0]; // On garde la première
 
-        if (isIp) {
-          try {
-            const rev = await dns.reverse(target);
-            results.push({ title: `PTR pour ${target}`, data: rev });
-          } catch (e) {
-            results.push({ title: `PTR pour ${target}`, error: e.message });
-          }
-        }
+      // ====== 2) WHOIS / ASN via BGPView ======
+      try {
+        const whois = await axios.get(`https://api.bgpview.io/ip/${ip}`);
+        const data = whois.data.data;
+
+        output += `🏢 *Détails réseau (ASN / Hébergeur)*\n\`\`\`bash\nASN: ${data.asn.asn}\nOrganisation: ${data.asn.name}\nRéseau: ${data.asn.description}\n\`\`\`\n`;
+      } catch {
+        output += `⚠️ Impossible de récupérer ASN.\n\n`;
       }
 
-      let out = `🔎 *Résultats DNS pour* \`${target}\``;
-      if (reqType) out += ` *(type: ${reqType})*`;
-      out += `\n\n`;
-
-      for (const item of results) {
-        out += `📘 *${item.title}*\n`;
-        if (item.error) {
-          out += '```bash\n';
-          out += `Erreur: ${item.error}\n`;
-          out += '```\n\n';
-          continue;
-        }
-
-        if (Array.isArray(item.data)) {
-          out += '```bash\n';
-          for (const entry of item.data) {
-            if (typeof entry === 'object') {
-              out += `${JSON.stringify(entry, null, 2)}\n`;
-            } else {
-              out += `${String(entry)}\n`;
-            }
-          }
-          out += '```\n\n';
-        } else if (typeof item.data === 'object') {
-          out += '```bash\n';
-          out += `${JSON.stringify(item.data, null, 2)}\n`;
-          out += '```\n\n';
-        } else {
-          out += '```bash\n';
-          out += `${String(item.data)}\n`;
-          out += '```\n\n';
-        }
+      // ====== 3) Géolocalisation serveur ======
+      try {
+        const geo = await axios.get(`https://ipapi.co/${ip}/json/`);
+        output += `🌍 *Localisation du serveur*\n\`\`\`bash\nPays: ${geo.data.country_name}\nVille: ${geo.data.city}\nFournisseur: ${geo.data.org}\n\`\`\`\n`;
+      } catch {
+        output += `⚠️ Échec géolocalisation.\n\n`;
       }
 
-      await safeSend(out);
-    } catch (err) {
-      await bot.sendMessage(chatId, `⚠️ Erreur lors de la recherche DNS : ${err.message}`, { reply_to_message_id: msg.message_id });
+      // ====== 4) DNS avancé ======
+      const checks = ['NS', 'MX', 'TXT', 'SOA'];
+      for (const type of checks) {
+        try {
+          const rec = await dns.resolve(domain, type);
+          output += `📑 *Enregistrements ${type}*\n\`\`\`bash\n${JSON.stringify(rec, null, 2)}\n\`\`\`\n`;
+        } catch {}
+      }
+
+      await safeSend(output);
+
+    } catch (e) {
+      bot.sendMessage(chatId, `❌ Domaine invalide ou inaccessible.`);
     }
   }
 };
