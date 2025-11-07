@@ -11,8 +11,7 @@ module.exports = {
       });
     }
 
-    
-    const typingMessage = await bot.sendChatAction(msg.chat.id, "typing");
+    await bot.sendChatAction(msg.chat.id, "typing");
 
     try {
       const res = await axios.get(
@@ -20,11 +19,18 @@ module.exports = {
       );
       const reply = res.data || "🤖 Aucune réponse reçue.";
 
-      await bot.sendMessage(
-        msg.chat.id,
-        `💬 *Question :* ${question}\n\n🤖 *Digital Crew 243 :* ${reply}`,
-        { parse_mode: "Markdown", reply_to_message_id: msg.message_id }
-      );
+      const fullMessage = `💬 *Question :* ${question}\n\n🤖 *Digital Crew 243 :* ${reply}`;
+
+      
+      const CHUNK_SIZE = 4000;
+      for (let i = 0; i < fullMessage.length; i += CHUNK_SIZE) {
+        const part = fullMessage.substring(i, i + CHUNK_SIZE);
+        await bot.sendMessage(msg.chat.id, part, {
+          parse_mode: "Markdown",
+          reply_to_message_id: msg.message_id
+        });
+      }
+
     } catch (error) {
       console.error("Erreur IA :", error.message);
       await bot.sendMessage(
