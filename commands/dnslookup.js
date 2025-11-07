@@ -26,7 +26,7 @@ module.exports = {
     const safeSend = async (text) => {
       const CHUNK = 4000;
       for (let i = 0; i < text.length; i += CHUNK) {
-        await bot.sendMessage(chatId, text.substring(i, i + CHUNK), { reply_to_message_id: msg.message_id });
+        await bot.sendMessage(chatId, text.substring(i, i + CHUNK), { parse_mode: 'Markdown', reply_to_message_id: msg.message_id });
       }
     };
 
@@ -42,7 +42,7 @@ module.exports = {
           }
         } else {
           try {
-            const r = await (reqType === 'SOA' ? dns.resolveSoa(target) : (reqType === 'ANY' ? dns.resolveAny(target) : dns.resolve(target, reqType)));
+            const r = await (reqType === 'SOA' ? dns.resolveSoa(target) : dns.resolve(target, reqType));
             results.push({ title: `${reqType} pour ${target}`, data: r });
             if (reqType === 'A' && Array.isArray(r) && r.length) {
               try {
@@ -82,9 +82,7 @@ module.exports = {
             }
           } else {
             const reason = s.reason || s;
-            const match = reason && reason.type ? reason.type : null;
-            const typeName = match || 'UNKNOWN';
-            results.push({ title: `${typeName}`, error: reason.message || String(reason) });
+            results.push({ title: `Erreur`, error: reason.message || String(reason) });
           }
         }
 
@@ -98,24 +96,37 @@ module.exports = {
         }
       }
 
-      let out = `🔎 Résultats DNS pour *${target}*`;
-      if (reqType) out += ` (type: ${reqType})`;
+      let out = `🔎 *Résultats DNS pour* \`${target}\``;
+      if (reqType) out += ` *(type: ${reqType})*`;
       out += `\n\n`;
 
       for (const item of results) {
-        out += `📘 ${item.title}\n`;
+        out += `📘 *${item.title}*\n`;
         if (item.error) {
-          out += `❌ Erreur: ${item.error}\n\n`;
+          out += '```bash\n';
+          out += `Erreur: ${item.error}\n`;
+          out += '```\n\n';
           continue;
         }
+
         if (Array.isArray(item.data)) {
+          out += '```bash\n';
           for (const entry of item.data) {
-            out += `\`\`\`\n${typeof entry === 'object' ? JSON.stringify(entry, null, 2) : String(entry)}\n\`\`\`\n`;
+            if (typeof entry === 'object') {
+              out += `${JSON.stringify(entry, null, 2)}\n`;
+            } else {
+              out += `${String(entry)}\n`;
+            }
           }
+          out += '```\n\n';
         } else if (typeof item.data === 'object') {
-          out += `\`\`\`\n${JSON.stringify(item.data, null, 2)}\n\`\`\`\n`;
+          out += '```bash\n';
+          out += `${JSON.stringify(item.data, null, 2)}\n`;
+          out += '```\n\n';
         } else {
-          out += `\`\`\`\n${String(item.data)}\n\`\`\`\n`;
+          out += '```bash\n';
+          out += `${String(item.data)}\n`;
+          out += '```\n\n';
         }
       }
 
