@@ -1,49 +1,60 @@
 const dns = require('dns').promises;
-const whois = require('whois-json');
-const geoip = require('geoip-lite');
+const axios = require('axios');
 
-async function resolveDNS(domain) {
-  let r = {};
-  try { r.A = await dns.resolve(domain, 'A'); } catch {}
-  try { r.AAAA = await dns.resolve(domain, 'AAAA'); } catch {}
-  try { r.MX = await dns.resolve(domain, 'MX'); } catch {}
-  try { r.TXT = await dns.resolve(domain, 'TXT'); } catch {}
-  try { r.NS = await dns.resolve(domain, 'NS'); } catch {}
-  try { r.CNAME = await dns.resolve(domain, 'CNAME'); } catch {}
-  if (!r.A && !r.AAAA && !r.MX && !r.TXT && !r.NS && !r.CNAME) {
-    try { r.ANY = await dns.resolve(domain, 'ANY'); } catch { return null; }
+module.exports = {
+  name: 'dnslookup',
+  description: 'Recherche DNS avancée + WHOIS + ASN + Géolocalisation serveur + infos réseau',
+  async execute(bot, msg, args) {
+    const chatId = msg.chat.id;
+    const domain = (args || []).join(" ").trim();
+    if (!domain) return bot.sendMessage(chatId, "🔎 Utilisation : /dnslookup [domaine]", { reply_to_message_id: msg.message_id });
+
+    const safeSend = async (text) => {
+      const CHUNK = 3800;
+      for (let i = 0; i < text.length; i += CHUNK) {
+        await bot.sendMessage(chatId, text.substring(i, i + CHUNK), { parse_mode: 'Markdown' });
+      }
+    };
+
+    let output = `🌐 *Analyse complète du domaine* \`${domain}\`\n\n`;
+
+    try {
+      let aRecord = await dns.resolve(domain, 'A');
+      output += `📌 *Adresse IPv4*\n\`\`\`bash\n${aRecord.join('\n')}\n\`\`\`\n`;
+
+      let ipv6Record = [];
+      try { ipv6Record = await dns.resolve(domain, 'AAAA'); } catch {}
+      if (ipv6Record.length) output += `📌 *Adresse IPv6*\n\`\`\`bash\n${ipv6Record.join('\n')}\n\`\`\`\n`;
+
+      let cnameRecord = [];
+      try { cnameRecord = await dns.resolve(domain, 'CNAME'); } catch {}
+      if (cnameRecord.length) output += `🔗 *CNAME*\n\`\`\`bash\n${cnameRecord.join('\n')}\n\`\`\`\n`;
+
+      const ip = aRecord[0];
+
+      try {
+        const whois = await axios.get(`https://api.bgpview.io/ip/${ip}`);
+        const data = whois.data.data;
+        output += `🏢 *ASN / Hébergeur*\n\`\`\`bash\nASN: ${data.asn.asn}\nOrganisation: ${data.asn.name}\nRéseau: ${data.asn.description}\n\`\`\`\n`;
+      } catch { output += `⚠️ Impossible de récupérer ASN.\n\n`; }
+
+      try {
+        const geo = await axios.get(`https://ipapi.co/${ip}/json/`);
+        output += `🌍 *Localisation serveur*\n\`\`\`bash\nPays: ${geo.data.country_name}\nVille: ${geo.data.city}\nFournisseur: ${geo.data.org}\nLatitude: ${geo.data.latitude}\nLongitude: ${geo.data.longitude}\n\`\`\`\n`;
+      } catch { output += `⚠️ Échec géolocalisation.\n\n`; }
+
+      const types = ['NS', 'MX', 'TXT', 'SOA', 'PTR', 'SPF'];
+      for (const type of types) {
+        try {
+          const rec = await dns.resolve(domain, type);
+          output += `📑 *Enregistrements ${type}*\n\`\`\`bash\n${JSON.stringify(rec, null, 2)}\n\`\`\`\n`;
+        } catch {}
+      }
+
+      await safeSend(output);
+
+    } catch {
+      bot.sendMessage(chatId, `❌ Domaine invalide ou inaccessible.`);
+    }
   }
-  return r;
-}
-
-bot.onText(/\/dns (.+)/, async (msg, match) => {
-  const chatId = msg.chat.id;
-  const domain = match[1].replace(/https?:\/\//g, '').replace(/\/.*/g, '').trim();
-
-  const dnsInfo = await resolveDNS(domain);
-  if (!dnsInfo) return bot.sendMessage(chatId, "⚠️ Aucun enregistrement DNS trouvé.");
-
-  let ip = dnsInfo.A ? dnsInfo.A[0] : dnsInfo.AAAA ? dnsInfo.AAAA[0] : null;
-  let whoisInfo = ip ? await whois(domain).catch(()=>null) : null;
-  let geo = ip ? geoip.lookup(ip) : null;
-
-  let txt = `\`\`\`\nDomaine: ${domain}\n\`\`\``;
-
-  if (dnsInfo.A) txt += `\nA: ${dnsInfo.A.join(', ')}`;
-  if (dnsInfo.AAAA) txt += `\nAAAA: ${dnsInfo.AAAA.join(', ')}`;
-  if (dnsInfo.MX) txt += `\nMX:\n${dnsInfo.MX.map(x=>` - ${x.exchange} (${x.priority})`).join('\n')}`;
-  if (dnsInfo.NS) txt += `\nNS:\n${dnsInfo.NS.map(x=>` - ${x}`).join('\n')}`;
-  if (dnsInfo.CNAME) txt += `\nCNAME:\n${dnsInfo.CNAME.join('\n')}`;
-  if (dnsInfo.TXT) txt += `\nTXT:\n${dnsInfo.TXT.map(x=>` - ${x}`).join('\n')}`;
-  if (dnsInfo.ANY) txt += `\nANY:\n${dnsInfo.ANY.map(x=>` - ${JSON.stringify(x)}`).join('\n')}`;
-
-  if (ip) txt += `\n\nIP Source: ${ip}`;
-  if (geo) txt += `\nPays: ${geo.country}\nVille: ${geo.city || "N/A"}\nRéseau: ${geo.org || "N/A"}`;
-
-  if (whoisInfo && whoisInfo.asn) {
-    txt += `\nASN: ${whoisInfo.asn}`;
-    if (whoisInfo.org) txt += `\nOrganisation: ${whoisInfo.org}`;
-  }
-
-  bot.sendMessage(chatId, txt, { parse_mode: "Markdown" });
-});
+};
