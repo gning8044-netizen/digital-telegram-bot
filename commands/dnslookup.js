@@ -3,11 +3,18 @@ const axios = require('axios');
 
 module.exports = {
   name: 'dnslookup',
-  description: 'Recherche DNS avancée + WHOIS + ASN + Géolocalisation serveur + infos réseau',
+  description: 'Recherche DNS avancée + WHOIS + ASN + Géolocalisation serveur',
   async execute(bot, msg, args) {
     const chatId = msg.chat.id;
-    const domain = (args || []).join(" ").trim();
-    if (!domain) return bot.sendMessage(chatId, "🔎 Utilisation : /dnslookup [domaine]", { reply_to_message_id: msg.message_id });
+    const input = (args || []).join(" ").trim();
+    if (!input) return bot.sendMessage(chatId, "🔎 Utilisation : /dnslookup [domaine ou URL]", { reply_to_message_id: msg.message_id });
+
+    let domain;
+    try {
+      domain = new URL(input).hostname;
+    } catch {
+      domain = input.replace(/^https?:\/\//, '').split('/')[0];
+    }
 
     const safeSend = async (text) => {
       const CHUNK = 3800;
