@@ -7,7 +7,7 @@ module.exports = {
     const chatId = msg.chat.id;
     const query = args.join(' ').trim();
     if (!query) {
-      return bot.sendMessage(chatId, '❌ Utilisation : /ip [adresse IP ou domaine]', { reply_to_message_id: msg.message_id });
+      return bot.sendMessage(chatId, '❌ Utilisation : /ipinfo [adresse IP ou domaine]', { reply_to_message_id: msg.message_id });
     }
 
     try {
