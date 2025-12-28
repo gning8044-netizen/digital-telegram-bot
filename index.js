@@ -114,7 +114,8 @@ bot.on('message', async msg => {
 
 bot.on('callback_query', async query => {
   const userId = query.from.id.toString();
-  const adminId = require.main.require('./index.js').adminChatId.toString();
+  // CORRECTION ICI - c'était la seule vraie erreur :
+  const adminId = adminChatId.toString();  // Au lieu de require.main.require('./index.js')
 
   if (query.data === 'verify_sub') {
     const isSub = await checkSubscription(bot, query.from.id);
