@@ -1,90 +1,108 @@
 const os = require('os');
-const util = require('util');
+const fs = require('fs');
+const path = require('path');
 const { adminChatId } = require('../index.js');
 
 module.exports = {
   name: 'uptime',
-  description: 'Informations système avancées',
+  description: 'Affiche les statistiques détaillées du bot',
   async execute(bot, msg) {
     try {
-      const startTime = Date.now();
-      
-      // Calculs
       const uptime = process.uptime();
-      const formatUptime = (seconds) => {
-        const d = Math.floor(seconds / 86400);
-        const h = Math.floor((seconds % 86400) / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = Math.floor(seconds % 60);
-        return `${d}j ${h}h ${m}m ${s}s`;
-      };
+      const days = Math.floor(uptime / 86400);
+      const hours = Math.floor((uptime % 86400) / 3600);
+      const minutes = Math.floor((uptime % 3600) / 60);
+      const seconds = Math.floor(uptime % 60);
       
-      const mem = process.memoryUsage();
       const totalMem = os.totalmem();
       const freeMem = os.freemem();
       const usedMem = totalMem - freeMem;
+      const memUsage = ((usedMem / totalMem) * 100).toFixed(1);
       
-      // Informations utilisateur
       const user = msg.from;
-      const chat = msg.chat;
-      const botInfo = await bot.getMe();
+      const userName = user.username ? `@${user.username}` : user.first_name || 'Utilisateur';
       
-      // Création du message avec design
+      let userPhotoUrl = '';
+      try {
+        const photos = await bot.getUserProfilePhotos(user.id);
+        if (photos.total_count > 0) {
+          const fileId = photos.photos[0][0].file_id;
+          const file = await bot.getFile(fileId);
+          userPhotoUrl = `https://api.telegram.org/file/bot${bot.token}/${file.file_path}`;
+        }
+      } catch (error) {}
+      
+      const cpus = os.cpus();
+      const cpuModel = cpus[0].model;
+      const cpuCores = cpus.length;
+      
+      const botInfo = await bot.getMe();
+      const botUsername = botInfo.username;
+      
+      const usersFile = path.join(__dirname, '../users.json');
+      let totalUsers = 0;
+      let activeUsers = 0;
+      let bannedUsers = 0;
+      
+      if (fs.existsSync(usersFile)) {
+        try {
+          const users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
+          if (Array.isArray(users)) {
+            totalUsers = users.length;
+            bannedUsers = users.filter(u => u.banned).length;
+            activeUsers = totalUsers - bannedUsers;
+          }
+        } catch (error) {}
+      }
+      
       const message = `
-╔══════════════════════════════════════╗
-           🔷 *DIGITAL CREW BOT* 🔷
-╚══════════════════════════════════════╝
+┌─────────────────────────────┐
+         ⚡ *SYSTEM STATUS* ⚡
+└─────────────────────────────┘
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃            👤 USER INFO              ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-├─ 📛 *Name*: ${user.first_name || ''} ${user.last_name || ''}
-├─ 🆔 *Username*: ${user.username ? '@' + user.username : 'N/A'}
-├─ 🔢 *User ID*: \`${user.id}\`
-├─ 💬 *Chat Type*: ${chat.type}
-├─ 🏷️ *Chat ID*: \`${chat.id}\`
+• *BOT INFORMATION*
+├─ 🤖 Bot: @${botUsername}
+├─ 👑 Admin: \`${adminChatId}\`
+├─ ⏱️ Uptime: ${days}j ${hours}h ${minutes}m ${seconds}s
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃            🤖 BOT STATUS             ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-├─ ⚡ *Bot*: @${botInfo.username}
-├─ ⏱️ *Uptime*: ${formatUptime(uptime)}
-├─ 👑 *Admin*: \`${adminChatId}\`
-├─ 🚀 *Version*: Node.js ${process.version}
+• *USER STATS*
+├─ 👤 User: ${userName}
+├─ 🆔 ID: \`${user.id}\`
+├─ 💬 Chat: ${msg.chat.type}
+├─ 👥 Users: ${totalUsers} (✅${activeUsers} 🚫${bannedUsers})
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃            📊 RESOURCES              ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-├─ 🧠 *RAM Total*: ${(totalMem / 1024 / 1024 / 1024).toFixed(2)} GB
-├─ 📈 *RAM Used*: ${(usedMem / 1024 / 1024 / 1024).toFixed(2)} GB (${((usedMem / totalMem) * 100).toFixed(1)}%)
-├─ 💾 *Process RAM*: ${(mem.rss / 1024 / 1024).toFixed(2)} MB
-├─ ⚙️ *CPU Cores*: ${os.cpus().length}
-├─ 🔥 *CPU Model*: ${os.cpus()[0].model.split(' ')[0]}
-├─ 🖥️ *Platform*: ${os.platform()} (${os.arch()})
-├─ 🏠 *Hostname*: ${os.hostname()}
+• *SYSTEM RESOURCES*
+├─ 🧠 RAM: ${(usedMem / 1024 / 1024 / 1024).toFixed(1)}GB/${(totalMem / 1024 / 1024 / 1024).toFixed(1)}GB
+├─ 📈 Usage: ${memUsage}%
+├─ ⚙️ CPU: ${cpuModel.split(' ')[0]}
+├─ 🎯 Cores: ${cpuCores}
+├─ 🖥️ OS: ${os.platform()}
 
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃            📈 PERFORMANCE            ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-├─ 📦 *Heap Used*: ${(mem.heapUsed / 1024 / 1024).toFixed(2)} MB
-├─ 🗃️ *Heap Total*: ${(mem.heapTotal / 1024 / 1024).toFixed(2)} MB
-├─ 🎯 *External*: ${(mem.external / 1024 / 1024).toFixed(2)} MB
-├─ 🚀 *Response*: ${Date.now() - startTime}ms
+• *PERFORMANCE*
+├─ 🚀 Node.js: ${process.version}
+├─ 📦 Memory: ${(process.memoryUsage().rss / 1024 / 1024).toFixed(1)}MB
+└─ 📊 Heap: ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(1)}MB
 
-╔══════════════════════════════════════╗
-        🕐 ${new Date().toLocaleTimeString('fr-FR')}
-╚══════════════════════════════════════╝
+⏰ ${new Date().toLocaleTimeString('fr-FR')}
       `;
       
-      await bot.sendMessage(msg.chat.id, message, {
-        parse_mode: 'Markdown',
-        disable_web_page_preview: true,
-        reply_to_message_id: msg.message_id
-      });
+      if (userPhotoUrl) {
+        await bot.sendPhoto(msg.chat.id, userPhotoUrl, {
+          caption: message,
+          parse_mode: 'Markdown'
+        });
+      } else {
+        await bot.sendMessage(msg.chat.id, message, { parse_mode: 'Markdown' });
+      }
       
     } catch (error) {
-      console.error('Erreur sysinfo:', error);
-      bot.sendMessage(msg.chat.id, '⚠️ Impossible de récupérer les informations système.');
+      const simpleMessage = `
+🤖 *Bot Status*
+├─ ⏱️ Uptime: ${Math.floor(process.uptime() / 3600)}h
+├─ 🧠 RAM: ${(os.freemem() / 1024 / 1024 / 1024).toFixed(1)}GB free
+└─ 🚀 Node: ${process.version}
+      `;
+      await bot.sendMessage(msg.chat.id, simpleMessage, { parse_mode: 'Markdown' });
     }
   }
 };
