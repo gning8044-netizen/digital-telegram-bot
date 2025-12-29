@@ -18,35 +18,37 @@ module.exports = {
     
     const user = msg.from;
     const userName = user.first_name || user.username || 'Utilisateur';
+    const userTag = user.username ? `@${user.username}` : `ID: ${user.id}`;
+    
+    const cpuCount = os.cpus().length;
+    const cpuModel = os.cpus()[0].model.split(' ')[0];
+    const platform = os.platform();
+    const arch = os.arch();
     
     const message = `
-╔══════════════════════════════╗
-       🚀 *BOT STATUS* 🚀
-╚══════════════════════════════╝
+⚡ *DIGITAL CREW STATUS*
 
-▸ *👤 User*: ${userName}
-▸ *🆔 ID*: \`${user.id}\`
-▸ *💬 Chat*: ${msg.chat.type}
+┌─ *USER INFO*
+│ 👤 ${userName}
+│ 🏷️ ${userTag}
+│ 💬 ${msg.chat.type}
+│ 🆔 \`${user.id}\`
+└─
 
-╭━━━━━━━━━━━━━━━━━━━━━━━━━╮
-│     📊 SYSTEM INFO      │
-├─────────────────────────┤
-│ ⏱️ *Uptime*: ${days}d ${hours}h ${minutes}m ${seconds}s
-│ 🧠 *RAM*: ${memPercent}% used
-│ 📊 *Free*: ${(freeMem / 1024 / 1024 / 1024).toFixed(1)}GB
-│ ⚙️ *CPU*: ${os.cpus().length} cores
-│ 🖥️ *OS*: ${os.platform()} ${os.arch()}
-╰━━━━━━━━━━━━━━━━━━━━━━━━━╯
+┌─ *SYSTEM UPTIME*
+│ ⏱️ ${days}d ${hours}h ${minutes}m ${seconds}s
+│ 🧠 RAM: ${memPercent}% (${(freeMem / 1024 / 1024 / 1024).toFixed(1)}GB free)
+│ ⚙️ CPU: ${cpuCount}× ${cpuModel}
+│ 🖥️ ${platform}/${arch}
+└─
 
-╭━━━━━━━━━━━━━━━━━━━━━━━━━╮
-│     🔧 PERFORMANCE      │
-├─────────────────────────┤
-│ 📦 *Memory*: ${(process.memoryUsage().rss / 1024 / 1024).toFixed(1)}MB
-│ 🚀 *Node*: ${process.version}
-│ 👑 *Admin*: \`${adminChatId}\`
-╰━━━━━━━━━━━━━━━━━━━━━━━━━╯
+┌─ *PERFORMANCE*
+│ 📦 Memory: ${(process.memoryUsage().rss / 1024 / 1024).toFixed(1)}MB
+│ 🚀 Node: ${process.version}
+│ 👑 Admin: \`${adminChatId}\`
+└─
 
-⏰ ${new Date().toLocaleTimeString('fr-FR')}
+_🕐 ${new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}_
     `;
     
     await bot.sendMessage(msg.chat.id, message, { parse_mode: 'Markdown' });
