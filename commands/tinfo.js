@@ -39,27 +39,27 @@ module.exports = {
       } = data;
 
       const caption = `
-┌─╾╼─╾╼─╾╼─╾╼─╾╼─╾╼─╾╼─╾╼─┐
-        ⚡ *TIKTOK INFO* ⚡
-└─╾╼─╾╼─╾╼─╾╼─╾╼─╾╼─╾╼─╾╼─┘
+┌──────────────┐
+   ⚡ TIKTOK INFO ⚡
+└──────────────┘
 
-┌─ • *PROFIL* •
+┌─ • PROFIL •
 │
-├─ 📛 *Nickname*: ${nickname || 'N/A'}
-├─ 🏷️ *Username*: @${username}
-├─ ✅ *Verified*: ${verified ? 'Yes' : 'No'}
-├─ 💬 *Bio*: ${signature || 'No bio'}
+├─ 📛 Nickname: ${nickname || 'N/A'}
+├─ 🏷️ Username: @${username}
+├─ ✅ Verified: ${verified ? 'Yes' : 'No'}
+├─ 💬 Bio: ${signature?.slice(0, 40) || 'No bio'}${signature && signature.length > 40 ? '...' : ''}
 │
-└─ • *STATISTIQUES* •
-   ├─ ❤️ *Likes*: ${heartCount || '0'}
-   ├─ 👥 *Followers*: ${followerCount || '0'}
-   ├─ ➡️ *Following*: ${followingCount || '0'}
-   ├─ 🎥 *Videos*: ${videoCount || '0'}
-   └─ 🔗 *Relation*: ${relation || 'N/A'}
+└─ • STATISTIQUES •
+   ├─ ❤️ Likes: ${heartCount || '0'}
+   ├─ 👥 Followers: ${followerCount || '0'}
+   ├─ ➡️ Following: ${followingCount || '0'}
+   ├─ 🎥 Videos: ${videoCount || '0'}
+   └─ 🔗 Relation: ${relation || 'Not specified'}
 
-┌─╾╼─╾╼─╾╼─╾╼─╾╼─╾╼─╾╼─╾╼─┐
-   📱 *Powered by Digital Crew*
-└─╾╼─╾╼─╾╼─╾╼─╾╼─╾╼─╾╼─╾╼─┘
+┌──────────────┐
+📱 Digital Crew
+└──────────────┘
       `;
 
       try {
@@ -76,27 +76,7 @@ module.exports = {
         return bot.sendMessage(chatId, "❌ Timeout. L'API TikTok est lente.");
       }
       
-      try {
-        const backupApi = await axios.get(`https://tikwm.com/api/user/info?unique_id=${encodeURIComponent(input)}`);
-        if (backupApi.data && backupApi.data.data) {
-          const user = backupApi.data.data;
-          const backupCaption = `
-📱 *TikTok Info*
-┌─────────────────
-│ 👤 @${user.unique_id}
-│ 📛 ${user.nickname}
-│ 👥 ${user.followers} followers
-│ ➡️ ${user.following} following
-│ 🎥 ${user.videoCount} videos
-└─────────────────
-          `;
-          await bot.sendMessage(chatId, backupCaption, { parse_mode: "Markdown" });
-        } else {
-          bot.sendMessage(chatId, "❌ Erreur API TikTok.");
-        }
-      } catch {
-        bot.sendMessage(chatId, "❌ Service TikTok indisponible.");
-      }
+      bot.sendMessage(chatId, "❌ Erreur API TikTok.");
     }
   }
 };
