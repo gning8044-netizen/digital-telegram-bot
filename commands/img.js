@@ -10,7 +10,7 @@ module.exports = {
 
     if (!query) {
       return bot.sendMessage(
-        chatiat,
+        chatId,
         '🖼️ Fournis des mots-clés\nExemple : /img chat'
       );
     }
