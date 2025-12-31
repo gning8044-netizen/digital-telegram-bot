@@ -1,17 +1,18 @@
 module.exports = {
-  name: 'iptracker',
-  description: 'Détecte ton adresse IP et ta localisation.',
+  name: 'unsend',
+  description: 'Supprime le message auquel tu réponds',
   async execute(bot, msg) {
-    const chatId = msg.chat.id;
-    const baseUrl = 'https://numero-virtuel.onrender.com';
-
-    const message = `🔗 📍 Copiez le lien ci-dessous et envoyez-le à votre victime  
-Pour connaître son emplacement, sa localisation exacte 📡  
-et même voir son adresse IP 🔍  
-👇  
-⚠️ Utilisation à vos risques et périls. Pour but éducatif uniquement. :\n${baseUrl}/${chatId}\n\n` +
-      `Pour obtenir des informations détaillées une fois l'adresse IP reçue, utilisez la commande /ipinfo.`;
-
-    await bot.sendMessage(chatId, message);
+    const reply = msg.reply_to_message;
+    
+    if (!reply) {
+      return bot.sendMessage(msg.chat.id, "❌ Réponds à un message.");
+    }
+    
+    try {
+      await bot.deleteMessage(msg.chat.id, reply.message_id);
+      await bot.deleteMessage(msg.chat.id, msg.message_id);
+    } catch (error) {
+      bot.sendMessage(msg.chat.id, "❌ Impossible de supprimer.");
+    }
   }
 };
