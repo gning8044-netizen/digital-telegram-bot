@@ -11,30 +11,46 @@ module.exports = {
     const commandsPath = path.join(__dirname);
     const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js') && file !== 'help.js');
 
-    const adminId = require.main.require('./index.js').adminChatId;
+    const adminId = '6157845763';
 
     let inline_keyboard = [];
 
     commandFiles.forEach(file => {
-      const command = require(path.join(commandsPath, file));
-      if (['ban', 'unban', 'stats', 'broadcast', 'send'].includes(command.name)) return;
-      inline_keyboard.push([{ text: command.name, callback_data: `run_${command.name}` }]);
+      try {
+        const command = require(path.join(commandsPath, file));
+        if (command.name && !['ban', 'unban', 'stats', 'broadcast', 'send'].includes(command.name)) {
+          inline_keyboard.push([{ text: command.name, callback_data: `run_${command.name}` }]);
+        }
+      } catch (error) {
+        console.log(`Erreur chargement commande ${file}:`, error.message);
+      }
     });
 
-    if (userId.toString() === adminId.toString()) {
+    if (userId.toString() === adminId) {
       inline_keyboard.push([{ text: '🛠 Admin', callback_data: 'admin_menu' }]);
     }
 
+    if (inline_keyboard.length === 0) {
+      return bot.sendMessage(chatId, '📭 Aucune commande disponible pour le moment.');
+    }
+
     const message = `✨ Bienvenue ${userName} !\n\n📚 Liste des commandes disponibles :`;
-    
-    const photos = await bot.getUserProfilePhotos(userId, 0, 1);
-    if (photos.total_count > 0) {
-      const fileId = photos.photos[0][0].file_id;
-      await bot.sendPhoto(chatId, fileId, {
-        caption: message,
-        reply_markup: { inline_keyboard }
-      });
-    } else {
+
+    try {
+      const photos = await bot.getUserProfilePhotos(userId, 0, 1);
+      if (photos.total_count > 0) {
+        const fileId = photos.photos[0][0].file_id;
+        await bot.sendPhoto(chatId, fileId, {
+          caption: message,
+          reply_markup: { inline_keyboard }
+        });
+      } else {
+        await bot.sendMessage(chatId, message, {
+          reply_markup: { inline_keyboard }
+        });
+      }
+    } catch (error) {
+      console.log('Erreur help:', error.message);
       await bot.sendMessage(chatId, message, {
         reply_markup: { inline_keyboard }
       });
@@ -43,8 +59,9 @@ module.exports = {
 };
 
 module.exports.adminMenuHandler = async (bot, query) => {
-  const adminId = require.main.require('./index.js').adminChatId;
-  if (query.from.id.toString() !== adminId.toString()) {
+  const adminId = '6157845763';
+  
+  if (query.from.id.toString() !== adminId) {
     return bot.answerCallbackQuery(query.id, { text: '🚫 Accès refusé.' });
   }
 
@@ -58,11 +75,15 @@ module.exports.adminMenuHandler = async (bot, query) => {
       { text: '🔙 Retour', callback_data: 'run_help' }
     ];
 
-    await bot.editMessageText('🛠 Menu Admin', {
-      chat_id: query.message.chat.id,
-      message_id: query.message.message_id,
-      reply_markup: { inline_keyboard: adminCommands.map(c => [c]) }
-    });
+    try {
+      await bot.editMessageText('🛠 Menu Admin', {
+        chat_id: query.message.chat.id,
+        message_id: query.message.message_id,
+        reply_markup: { inline_keyboard: adminCommands.map(c => [c]) }
+      });
+    } catch (error) {
+      console.log('Erreur admin menu:', error.message);
+    }
 
     bot.answerCallbackQuery(query.id);
   }
