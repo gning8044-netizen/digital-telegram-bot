@@ -56,6 +56,8 @@ async function checkSubscription(bot, userId) {
   }
 }
 
+const userVerificationCache = new Map();
+
 bot.on('message', async msg => {
   const chatId = msg.chat.id;
   const text = msg.text ? msg.text.trim() : '';
@@ -83,28 +85,34 @@ bot.on('message', async msg => {
   if (commandName === 'start') {
     const isSub = await checkSubscription(bot, user.id);
     if (!isSub) {
+      userVerificationCache.set(user.id, false);
       return bot.sendMessage(chatId, '👋 Bienvenue ! Avant de continuer, rejoins notre canal officiel :', {
         reply_markup: {
           inline_keyboard: [
             [{ text: '📢 Rejoindre le canal', url: `https://t.me/${channelUsername.replace('@', '')}` }],
-            [{ text: '✅ J’ai rejoint', callback_data: 'verify_sub' }]
+            [{ text: '✅ J\'ai rejoint', callback_data: 'verify_sub' }]
           ]
         }
       });
     }
-    return bot.sendMessage(chatId, `✅ Bienvenue ${user.username}! Tape /help pour voir les commandes disponibles.`);
+    userVerificationCache.set(user.id, true);
+    return bot.sendMessage(chatId, `✅ Bienvenue ${user.username}!\n\nVous êtes maintenant autorisé à utiliser le bot.\n\nTapez /help pour voir la liste de commandes.`);
   }
 
-  const isSub = await checkSubscription(bot, user.id);
-  if (!isSub) {
-    return bot.sendMessage(chatId, '🔒 Pour utiliser le bot, abonne-toi d’abord au canal ci-dessous :', {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '📢 Rejoindre le canal', url: `https://t.me/${channelUsername.replace('@', '')}` }],
-          [{ text: '✅ J’ai rejoint', callback_data: 'verify_sub' }]
-        ]
-      }
-    });
+  if (userVerificationCache.get(user.id) === false) {
+    const isSub = await checkSubscription(bot, user.id);
+    if (!isSub) {
+      return bot.sendMessage(chatId, '🔒 Pour utiliser le bot, abonne-toi d\'abord au canal ci-dessous :', {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '📢 Rejoindre le canal', url: `https://t.me/${channelUsername.replace('@', '')}` }],
+            [{ text: '✅ J\'ai rejoint', callback_data: 'verify_sub' }]
+          ]
+        }
+      });
+    }
+    userVerificationCache.set(user.id, true);
+    bot.sendMessage(chatId, `✅ Félicitations ${user.username}!\n\nVous êtes maintenant autorisé à utiliser le bot.\n\nTapez /help pour voir la liste de commandes.`);
   }
 
   const command = commands.get(commandName);
@@ -114,14 +122,17 @@ bot.on('message', async msg => {
 
 bot.on('callback_query', async query => {
   const userId = query.from.id.toString();
-  // CORRECTION ICI - c'était la seule vraie erreur :
-  const adminId = adminChatId.toString();  // Au lieu de require.main.require('./index.js')
+  const adminId = adminChatId.toString();
 
   if (query.data === 'verify_sub') {
     const isSub = await checkSubscription(bot, query.from.id);
     if (isSub) {
-      bot.answerCallbackQuery(query.id, { text: '✅ Abonnement vérifié. Tu peux maintenant utiliser le bot.' });
-      bot.sendMessage(query.message.chat.id, 'Bienvenue, accès autorisé.');
+      userVerificationCache.set(query.from.id, true);
+      bot.answerCallbackQuery(query.id, { text: '✅ Abonnement vérifié.' });
+      bot.editMessageText(`✅ Félicitations ${query.from.first_name}!\n\nVous êtes maintenant autorisé à utiliser le bot.\n\nTapez /help pour voir la liste de commandes.`, {
+        chat_id: query.message.chat.id,
+        message_id: query.message.message_id
+      });
     } else {
       bot.answerCallbackQuery(query.id, { text: '❌ Toujours pas abonné.' });
     }
@@ -136,7 +147,6 @@ bot.on('callback_query', async query => {
       { text: 'Stats', callback_data: 'run_stats' },
       { text: 'Broadcast', callback_data: 'run_broadcast'},
       { text: 'Send', callback_data: 'run_send'},
-      { text: 'Link', callback_data: 'run_link'},
       { text: '🔙 Retour', callback_data: 'run_help' }
     ];
     await bot.editMessageText('🛠 Menu Admin', {
@@ -155,6 +165,12 @@ bot.on('callback_query', async query => {
 
     if (['ban', 'unban', 'stats'].includes(cmdName) && userId !== adminId) {
       return bot.answerCallbackQuery(query.id, { text: '🚫 Accès refusé.' });
+    }
+
+    const isSub = await checkSubscription(bot, query.from.id);
+    if (!isSub) {
+      userVerificationCache.set(query.from.id, false);
+      return bot.answerCallbackQuery(query.id, { text: '❌ Abonne-toi d\'abord.' });
     }
 
     const fakeMsg = {
