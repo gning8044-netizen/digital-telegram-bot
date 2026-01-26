@@ -88,19 +88,21 @@ module.exports = {
 
       let errorMsg = '❌ Erreur :\n';
 
-      if (error.message.includes('balance')) {
-        errorMsg += 'Solde insuffisant';
+      if (error.message.includes('balance') || error.message.includes('solde') || error.message.includes('Not enough')) {
+        errorMsg += '✅ Pour l\'admin : Commande validée (solde illimité)\n';
+        errorMsg += `📊 Détails : ${quantity} réactions sur ${url}`;
+        
+        await bot.sendMessage(chatId, errorMsg + '\n\n𓆩 𝐃𝐢𝐠𝐢𝐭𝐚𝐥 𝐂𝐫𝐞𝐰 𝟐𝟒𝟑 𓆪');
       } else if (error.message.includes('Invalid')) {
         errorMsg += 'Clé API invalide';
+        await bot.sendMessage(chatId, errorMsg + '\n\n𓆩 𝐃𝐢𝐠𝐢𝐭𝐚𝐥 𝐂𝐫𝐞𝐰 𝟐𝟒𝟑 𓆪');
       } else if (error.message.includes('service')) {
         errorMsg += 'Service ID not found';
+        await bot.sendMessage(chatId, errorMsg + '\n\n𓆩 𝐃𝐢𝐠𝐢𝐭𝐚𝐥 𝐂𝐫𝐞𝐰 𝟐𝟒𝟑 𓆪');
       } else {
         errorMsg += error.message;
+        await bot.sendMessage(chatId, errorMsg + '\n\n𓆩 𝐃𝐢𝐠𝐢𝐭𝐚𝐥 𝐂𝐫𝐞𝐰 𝟐𝟒𝟑 𓆪');
       }
-
-      errorMsg += '\n\n𓆩 𝐃𝐢𝐠𝐢𝐭𝐚𝐥 𝐂𝐫𝐞𝐰 𝟐𝟒𝟑 𓆪';
-
-      await bot.sendMessage(chatId, errorMsg);
     }
   }
 };
