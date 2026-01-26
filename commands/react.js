@@ -50,7 +50,9 @@ module.exports = {
       let response;
       
       try {
-        response = await axios.post('https://blesspanel.store/api/v2.php', apiData, {
+        const params = new URLSearchParams(apiData);
+        
+        response = await axios.post('https://blesspanel.store/api/v2.php', params.toString(), {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
