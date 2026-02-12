@@ -2,7 +2,7 @@ const axios = require('axios');
 
 module.exports = {
   name: 'ai',
-  description: 'Discuter avec Copilot AI via Kyotaka API',
+  description: 'Discuter avec Digital Crew AI',
 
   async execute(bot, msg, args) {
     const chatId = msg.chat.id;
@@ -12,18 +12,16 @@ module.exports = {
       return bot.sendMessage(
         chatId,
         '🤖 **Digital Crew AI**\n\n' +
-        'Pose ta question à l\'IA Copilot.\n\n' +
+        'Pose ta question à mon intelligence artificielle.\n\n' +
         '**Utilisation :**\n' +
         '• `/ai Quelle est la capitale du Japon?`\n' +
-        '• `/ai Explique la relativité`\n' +
         '• `/ai --deep Réfléchis en profondeur`\n' +
-        '• `/ai --gpt5 Utilise GPT-5`\n\n' +
+        '• `/ai --gpt5 Mode avancé`\n\n' +
         '✨ Généré par Alphaconnect\n© Digital Crew 243',
         { parse_mode: 'Markdown' }
       );
     }
 
-    // Détecter les modèles spéciaux
     let model = 'default';
     let prompt = query;
     
@@ -35,52 +33,28 @@ module.exports = {
       prompt = query.replace('--gpt5', '').trim();
     }
 
-    const waitMsg = await bot.sendMessage(chatId, '🤔 Copilot réfléchit...');
+    const waitMsg = await bot.sendMessage(chatId, '🧠 Digital Crew AI réfléchit...');
 
     try {
-      // L'API est à la racine, pas sur /api/chat
-      const apiUrl = 'https://kyotaka-api.vercel.app/';
-      
-      const response = await axios({
-        method: 'GET', // ou 'POST' selon ce que tu préfères
-        url: apiUrl,
-        params: {
-          message: prompt,
-          model: model
-        },
-        timeout: 45000 // Timeout 45 secondes (WebSocket peut prendre du temps)
+      const response = await axios.get('https://kyotaka-api.vercel.app/', {
+        params: { message: prompt, model: model },
+        timeout: 45000
       });
 
       await bot.deleteMessage(chatId, waitMsg.message_id).catch(() => {});
 
-      if (response.data && response.data.message) {
-        let reply = response.data.message;
-        
-        // Couper si trop long
-        if (reply.length > 4000) {
-          reply = reply.substring(0, 4000) + '...\n\n📌 Message tronqué (4000 caractères max)';
-        }
-
+      if (response.data?.message) {
         await bot.sendMessage(
           chatId,
-          `🤖 **Copilot AI**\n\n${reply}\n\n✨ Généré par Alphaconnect\n© Digital Crew 243`,
+          `🤖 **Digital Crew AI**\n\n${response.data.message}\n\n✨ Généré par Alphaconnect\n© Digital Crew 243`,
           { parse_mode: 'Markdown' }
         );
-      } else {
-        throw new Error('Format de réponse invalide');
       }
 
     } catch (error) {
       console.error('AI ERROR:', error.message);
-      
       await bot.deleteMessage(chatId, waitMsg.message_id).catch(() => {});
-      
-      let errorMsg = '❌ Erreur de connexion à l\'API.';
-      if (error.code === 'ECONNABORTED') {
-        errorMsg = '⏰ Délai d\'attente dépassé. Copilot met trop de temps à répondre.';
-      }
-      
-      bot.sendMessage(chatId, errorMsg);
+      bot.sendMessage(chatId, '❌ Erreur de connexion à Digital Crew AI. Réessaie dans quelques secondes.');
     }
   }
 };
