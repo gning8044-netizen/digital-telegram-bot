@@ -1,79 +1,100 @@
-const axios = require("axios");
+const axios = require('axios');
 
 module.exports = {
-  name: "ai",
-  description: "Discute avec l'IA Digital Crew 243",
+  name: 'ai',
+  description: 'Discuter avec l\'IA Kyotaka',
+
   async execute(bot, msg, args) {
-    const question = args.join(" ");
-    if (!question) {
-      return bot.sendMessage(msg.chat.id, "⚠️ Utilise : /ai [ta question]", {
-        reply_to_message_id: msg.message_id,
-      });
-    }
+    const chatId = msg.chat.id;
+    const query = args.join(' ');
 
-    await bot.sendChatAction(msg.chat.id, "typing");
-
-    const apiUrl = "https://digital-dark-api.netlify.app/.netlify/functions/api";
-    let reply = "";
-
-    try {
-      const postData = { prompt: question };
-      
-      try {
-        const postRes = await axios.post(apiUrl, postData, {
-          timeout: 25000,
-          headers: { 'Content-Type': 'application/json' }
-        });
-        
-        if (postRes.data && postRes.data.response) {
-          reply = postRes.data.response;
-        } else if (postRes.data && typeof postRes.data === 'string') {
-          reply = postRes.data;
-        }
-      } catch (postError) {
-        const getRes = await axios.get(`${apiUrl}?prompt=${encodeURIComponent(question)}`, {
-          timeout: 25000
-        });
-        
-        if (getRes.data && getRes.data.response) {
-          reply = getRes.data.response;
-        } else if (getRes.data && typeof getRes.data === 'string') {
-          reply = getRes.data;
-        }
-      }
-
-      if (!reply) {
-        reply = "🤖 Aucune réponse reçue.";
-      }
-
-      reply = reply.replace(/\*/g, '');
-      
-      const fullMessage = `💬 *Question :* ${question}\n\n🤖 *Digital Crew 243 :*\n${reply}`;
-
-      const CHUNK_SIZE = 3900;
-      for (let i = 0; i < fullMessage.length; i += CHUNK_SIZE) {
-        const part = fullMessage.substring(i, i + CHUNK_SIZE);
-        await bot.sendMessage(msg.chat.id, part, {
-          parse_mode: "Markdown",
-          reply_to_message_id: msg.message_id
-        });
-      }
-
-    } catch (error) {
-      console.error("Erreur IA:", error.message);
-      
-      let errorMsg = "⚠️ Erreur de connexion à l'IA";
-      if (error.code === 'ECONNABORTED') {
-        errorMsg = "⏰ Timeout - Réessaie";
-      } else if (error.response?.status === 429) {
-        errorMsg = "🚫 Trop de requêtes. Patientez.";
-      }
-      
-      await bot.sendMessage(
-        msg.chat.id,
-        errorMsg,
-        { reply_to_message_id: msg.message_id }
+    if (!query) {
+      return bot.sendMessage(
+        chatId,
+        '🤖 **IA Kyotaka**\n\n' +
+        'Pose une question ou discute avec l\'IA.\n\n' +
+        '**Utilisation :**\n' +
+        '• `/ai Quelle est la capitale du Japon?`\n' +
+        '• `/ai Explique la relativité`\n' +
+        '• Répondre à un message avec `/ai`',
+        { parse_mode: 'Markdown' }
       );
     }
-  },
+
+    const waitMsg = await bot.sendMessage(chatId, '🤔 Je réfléchis...');
+
+    try {
+      // À TESTER - Essayez ces différentes URLs possibles
+      const possibleUrls = [
+        `https://kyotaka-api.vercel.app/api/chat?message=${encodeURIComponent(query)}`,
+        `https://kyotaka-api.vercel.app/api/chat?text=${encodeURIComponent(query)}`,
+        `https://kyotaka-api.vercel.app/api/chat?q=${encodeURIComponent(query)}`,
+        `https://kyotaka-api.vercel.app/api/ai?message=${encodeURIComponent(query)}`
+      ];
+
+      let response = null;
+      let successUrl = '';
+
+      for (const url of possibleUrls) {
+        try {
+          response = await axios.get(url, { timeout: 15000 });
+          if (response.data) {
+            successUrl = url;
+            break;
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+
+      if (!response || !response.data) {
+        throw new Error('Aucune réponse valide des endpoints testés');
+      }
+
+      // À ADAPTER - Formats de réponse possibles
+      let reply = '';
+      if (typeof response.data === 'string') {
+        reply = response.data;
+      } else if (response.data.response) {
+        reply = response.data.response;
+      } else if (response.data.message) {
+        reply = response.data.message;
+      } else if (response.data.answer) {
+        reply = response.data.answer;
+      } else if (response.data.text) {
+        reply = response.data.text;
+      } else {
+        reply = JSON.stringify(response.data, null, 2);
+      }
+
+      await bot.deleteMessage(chatId, waitMsg.message_id).catch(() => {});
+
+      // Couper si trop long
+      if (reply.length > 4000) {
+        reply = reply.substring(0, 4000) + '... [tronqué]';
+      }
+
+      await bot.sendMessage(
+        chatId,
+        `🤖 **Kyotaka AI**\n\n${reply}\n\n✨ Généré par Alphaconnect\n© Digital Crew 243`,
+        { parse_mode: 'Markdown' }
+      );
+
+    } catch (error) {
+      console.error('AI ERROR:', error.message);
+      
+      await bot.deleteMessage(chatId, waitMsg.message_id).catch(() => {});
+      
+      bot.sendMessage(
+        chatId,
+        '❌ Impossible de contacter l\'API Kyotaka.\n\n' +
+        'Vérifie que :\n' +
+        '• L\'URL est correcte (https://kyotaka-api.vercel.app)\n' +
+        '• Le endpoint est bien /api/chat.js ou /api/chat\n' +
+        '• La méthode (GET/POST) est bonne\n\n' +
+        '🔍 Tu peux tester dans ton navigateur :\n' +
+        '`https://kyotaka-api.vercel.app/api/chat?message=test`'
+      );
+    }
+  }
 };
