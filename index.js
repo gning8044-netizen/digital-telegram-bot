@@ -4,7 +4,7 @@ const http = require('http');
 const TelegramBot = require('node-telegram-bot-api');
 
 const token = process.env.BOT_TOKEN || '7678871534:AAE-5ZyKD6yXwR-ITUrCioFTpTM3nb3BiWw';
-const channelUsername = process.env.CHANNEL_USERNAME || '@digitalcrew2';
+const channelUsername = process.env.CHANNEL_USERNAME || '@digitalcrewX';
 const adminChatId = process.env.ADMIN_CHAT_ID || '6157845763';
 
 module.exports.adminChatId = adminChatId;
