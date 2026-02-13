@@ -24,7 +24,7 @@ module.exports = {
 
     let model = 'default';
     let prompt = query;
-
+    
     if (query.includes('--deep')) {
       model = 'think-deeper';
       prompt = query.replace('--deep', '').trim();
@@ -38,7 +38,7 @@ module.exports = {
     try {
       const response = await axios.get('https://kyotaka-api.vercel.app/', {
         params: { message: prompt, model: model },
-        timeout: 60000
+        timeout: 45000
       });
 
       await bot.deleteMessage(chatId, waitMsg.message_id).catch(() => {});
@@ -49,19 +49,12 @@ module.exports = {
           `🤖 **Digital Crew AI**\n\n${response.data.message}\n\n✨ Généré par Alphaconnect\n© Digital Crew 243`,
           { parse_mode: 'Markdown' }
         );
-      } else {
-        await bot.sendMessage(chatId, '❌ Réponse invalide de l\'API.');
       }
 
     } catch (error) {
       console.error('AI ERROR:', error.message);
       await bot.deleteMessage(chatId, waitMsg.message_id).catch(() => {});
-      
-      if (error.code === 'ECONNABORTED') {
-        bot.sendMessage(chatId, '⏰ Délai d\'attente dépassé. L\'IA met trop de temps à répondre, réessaie.');
-      } else {
-        bot.sendMessage(chatId, '❌ Erreur de connexion à Digital Crew AI. Réessaie dans quelques secondes.');
-      }
+      bot.sendMessage(chatId, '❌ Erreur de connexion à Digital Crew AI. Réessaie dans quelques secondes.');
     }
   }
 };
