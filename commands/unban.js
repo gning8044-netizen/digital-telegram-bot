@@ -49,7 +49,7 @@ module.exports = {
     try {
       await bot.sendMessage(userId, '✅ Tu as été débanni et peux maintenant utiliser le bot normalement.');
     } catch {
-      // ignore si l'utilisateur bloque le bot ou n'est pas accessible
+      
     }
   }
 };
