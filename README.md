@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://files.catbox.moe/wb9g38.jpg" width="100%">
+<img src="https://files.catbox.moe/wb9g38.jpg" width="90%">
 </p>
 
 <h1 align="center">Digital Telegram Bot</h1>
