@@ -88,8 +88,7 @@ Obtenir un Bot Token
 3. Envoyer :
 
 
-
-/newbot
+`/newbot`
 
 4. Définir le nom du bot
 
@@ -97,38 +96,30 @@ Obtenir un Bot Token
 5. Définir le username du bot
 
 
-
 BotFather fournira un token.
 
 Exemple :
 
-123456789:AAExampleTelegramBotToken
+> 123456789:AAExampleTelegramBotToken
 
-
----
 
 Obtenir son Telegram ID
 
-1. Rechercher @userinfobot
+1. Rechercher `@userinfobot`
 
 
 2. Envoyer :
 
 
-
-/start
+`/start`
 
 Le bot affichera l'identifiant Telegram du compte.
 
 
----
-
 Lancer le bot
-
+```bash
 node index.js
-
-
----
+```
 
 Déploiement
 
@@ -145,19 +136,14 @@ VPS
 Hébergement Node.js
 
 
-
----
-
 Contact
 
 <p align="center"><a href="https://wa.me/243833389567">
 <img src="https://img.shields.io/badge/Contact-WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white">
 </a></p>
----
 
 Credits
 
 <p align="center"><img src="https://img.shields.io/badge/Developed%20By-Digital%20Crew-black?style=for-the-badge"></p><p align="center">
 Digital Crew — Telegram Bot Framework
 </p>
-```
