@@ -33,45 +33,38 @@ npm install
 Configuration
 
 Dans index.js :
-
+```bash
 const token = process.env.BOT_TOKEN || 'LE_TOKEN_DU_BOT';
 const adminChatId = process.env.ADMIN_CHAT_ID || '615784xxx';
 const channelUsername = process.env.CHANNEL_USERNAME || '@digitalcrewX';
-
+```
 Configurer les valeurs suivantes :
 
-BOT TOKEN
+`BOT TOKEN`
 
 Remplacer :
 
-LE_TOKEN_DU_BOT
+`LE_TOKEN_DU_BOT`
 
 par le token du bot Telegram.
 
-
----
 
 ADMIN CHAT ID
 
 Remplacer :
 
-615784xxx
+`615784xxx`
 
 par l'identifiant Telegram de l'administrateur du bot.
 
-
----
 
 CHANNEL USERNAME
 
 Remplacer :
 
-@digitalcrewX
+`@digitalcrewX`
 
 par le username du canal Telegram.
-
-
----
 
 Obtenir un Bot Token
 
