@@ -49,7 +49,7 @@ Remplacer :
 par le token du bot Telegram.
 
 
-ADMIN CHAT ID
+`ADMIN CHAT ID`
 
 Remplacer :
 
@@ -58,7 +58,7 @@ Remplacer :
 par l'identifiant Telegram de l'administrateur du bot.
 
 
-CHANNEL USERNAME
+`CHANNEL USERNAME`
 
 Remplacer :
 
@@ -114,13 +114,13 @@ Déploiement
 
 Compatible avec :
 
-Render
+> Render
 
-Railway
+> Railway
 
-Pterodactyl
+> Pterodactyl
 
-VPS
+> VPS
 
 Hébergement Node.js
 
@@ -131,7 +131,7 @@ Contact
 <img src="https://img.shields.io/badge/Contact-WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white">
 </a></p>
 
-Credits
+# Credits
 
 <p align="center"><img src="https://img.shields.io/badge/Developed%20By-Digital%20Crew-black?style=for-the-badge"></p><p align="center">
 Digital Crew — Telegram Bot Framework
