@@ -110,7 +110,7 @@ Lancer le bot
 node index.js
 ```
 
-Déploiement
+# Déploiement
 
 Compatible avec :
 
@@ -122,10 +122,10 @@ Compatible avec :
 
 > VPS
 
-Hébergement Node.js
+> Hébergement Node.js
 
 
-Contact
+# Contact
 
 <p align="center"><a href="https://wa.me/243833389567">
 <img src="https://img.shields.io/badge/Contact-WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white">
