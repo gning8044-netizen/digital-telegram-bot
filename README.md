@@ -22,17 +22,13 @@ Base Node.js pour créer et déployer rapidement son propre bot Telegram.
 
 </p>
 
----
-
 # Installation
 
 ```bash
 git clone https://github.com/NeoZoneHub/Digital-telegram-bot
 cd Digital-telegram-bot
 npm install
-
-
----
+```
 
 Configuration
 
